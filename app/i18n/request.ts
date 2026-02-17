@@ -1,10 +1,10 @@
-// i18n/request.ts
+// app/i18n/request.ts
 import { getRequestConfig } from "next-intl/server";
 
 const loaders = {
-  en: () => import("../messages/en.json"),
-  kn: () => import("../messages/kn.json"),
-  hi: () => import("../messages/hi.json"),
+  en: () => import("../../messages/en.json"),
+  kn: () => import("../../messages/kn.json"),
+  hi: () => import("../../messages/hi.json"),
 } as const;
 
 type Locale = keyof typeof loaders;
@@ -18,3 +18,5 @@ export default getRequestConfig(async ({ requestLocale }) => {
     messages: (await loaders[safeLocale]()).default,
   };
 });
+
+
