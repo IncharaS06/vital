@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   authors: [{ name: "VITAL Team" }],
 
   // ✅ Change localhost -> your deployed domain
-  metadataBase: new URL("https://source1-p3s4.vercel.app"),
+  metadataBase: new URL("https://vital-theta.vercel.app/"),
 
   // ✅ PWA
   manifest: "/manifest.json",
