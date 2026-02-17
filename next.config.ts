@@ -1,7 +1,8 @@
 // next.config.ts
 import type { NextConfig } from "next";
 
-const withNextIntl = require("next-intl/plugin")("./i18n/request.ts");
+const withNextIntl = require("next-intl/plugin")("./app/i18n/request.ts");
+
 
 const withPWA = require("next-pwa")({
   dest: "public",
