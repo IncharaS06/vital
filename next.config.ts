@@ -1,7 +1,10 @@
 // next.config.ts
 import type { NextConfig } from "next";
+import path from "path";
 
-const withNextIntl = require("next-intl/plugin")("./i18n/request.ts");
+const withNextIntl = require("next-intl/plugin")(
+  path.resolve("./i18n/request.ts")
+);
 
 const withPWA = require("next-pwa")({
   dest: "public",
@@ -10,9 +13,6 @@ const withPWA = require("next-pwa")({
   disable: process.env.NODE_ENV === "development",
 });
 
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
-};
+const nextConfig: NextConfig = { reactStrictMode: true };
 
 export default withNextIntl(withPWA(nextConfig));
-
