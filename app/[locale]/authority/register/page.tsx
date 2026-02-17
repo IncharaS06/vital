@@ -16,7 +16,7 @@ import {
     doc,
     serverTimestamp
 } from "firebase/firestore";
-import { Eye, EyeOff, MapPin, Building2, User, Shield, Mail, Phone, FileText, Home } from "lucide-react";
+import { Eye, EyeOff, MapPin, Building2, User, Shield, Mail, Phone, FileText, Home, LogIn } from "lucide-react";
 import { FiAlertCircle } from "react-icons/fi";
 
 type Role = "pdo" | "village_incharge" | "tdo" | "ddo";
@@ -73,7 +73,7 @@ type Panchayat = {
 const validateIndianMobile = (phone: string): boolean => {
     // Remove all non-digits
     const cleaned = phone.replace(/\D/g, '');
-    
+
     // Check if it's a valid Indian mobile number
     // Indian mobile numbers: 10 digits starting with 6,7,8,9
     // With or without +91 or 0 prefix
@@ -92,7 +92,7 @@ const validateIndianMobile = (phone: string): boolean => {
 const formatIndianMobile = (phone: string): string => {
     // Remove all non-digits
     const cleaned = phone.replace(/\D/g, '');
-    
+
     // Format based on length
     if (cleaned.length === 10) {
         // Format as +91 XXXXX XXXXX
@@ -162,6 +162,8 @@ export default function AuthorityRegisterPage() {
                 enterAadhaar: "12-digit Aadhaar",
                 enterOfficeAddress: "Enter complete office address",
                 enterGramPanchayatId: "Enter official Gram Panchayat ID",
+                alreadyRegistered: "Already registered?",
+                loginHere: "Login here",
             },
             kn: {
                 title: "ಅಧಿಕಾರಿ ನೋಂದಣಿ",
@@ -211,6 +213,8 @@ export default function AuthorityRegisterPage() {
                 enterAadhaar: "12-ಅಂಕಿಯ ಆಧಾರ್",
                 enterOfficeAddress: "ಸಂಪೂರ್ಣ ಕಚೇರಿ ವಿಳಾಸ ನಮೂದಿಸಿ",
                 enterGramPanchayatId: "ಅಧಿಕೃತ ಗ್ರಾಮ ಪಂಚಾಯಿತಿ ಐಡಿ ನಮೂದಿಸಿ",
+                alreadyRegistered: "ಈಗಾಗಲೇ ನೋಂದಾಯಿಸಿದ್ದೀರಾ?",
+                loginHere: "ಇಲ್ಲಿ ಲಾಗಿನ್ ಮಾಡಿ",
             },
             hi: {
                 title: "प्राधिकारी पंजीकरण",
@@ -260,6 +264,8 @@ export default function AuthorityRegisterPage() {
                 enterAadhaar: "12-अंकीय आधार",
                 enterOfficeAddress: "पूरा कार्यालय पता दर्ज करें",
                 enterGramPanchayatId: "आधिकारिक ग्राम पंचायत आईडी दर्ज करें",
+                alreadyRegistered: "पहले से पंजीकृत हैं?",
+                loginHere: "यहाँ लॉगिन करें",
             },
         };
         return L[locale] || L.en;
@@ -350,7 +356,7 @@ export default function AuthorityRegisterPage() {
         // ✅ TEMPORARILY DISABLED DUE TO CORS ISSUES
         console.log(`[DEV] Email would be sent to ${userEmail} for ${userName} as ${userRole}`);
         return; // Exit early - COMMENT THIS OUT WHEN CORS IS FIXED
-        
+
         try {
             const cloudFunctionURL = process.env.NEXT_PUBLIC_CLOUD_FUNCTION_URL ||
                 "https://us-central1-your-project-id.cloudfunctions.net/sendRegistrationEmail";
@@ -410,7 +416,7 @@ export default function AuthorityRegisterPage() {
     const handleMobileChange = (value: string) => {
         // Remove all non-digits
         const digitsOnly = value.replace(/\D/g, '');
-        
+
         // Handle different input formats
         let processed = digitsOnly;
         if (digitsOnly.startsWith('91') && digitsOnly.length > 10) {
@@ -422,9 +428,9 @@ export default function AuthorityRegisterPage() {
         } else {
             processed = digitsOnly;
         }
-        
+
         setMobile(processed);
-        
+
         // Update validation state
         if (touched.mobile) {
             setTouched(prev => ({ ...prev, mobile: true }));
@@ -911,6 +917,17 @@ export default function AuthorityRegisterPage() {
                     }
                 }
 
+                @keyframes slideInRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
                     25% { transform: translateX(-3px); }
@@ -927,12 +944,31 @@ export default function AuthorityRegisterPage() {
                     50% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
                 }
 
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+
+                @keyframes shimmer {
+                    0% {
+                        background-position: -1000px 0;
+                    }
+                    100% {
+                        background-position: 1000px 0;
+                    }
+                }
+
                 .animate-fadeIn {
                     animation: fadeIn 0.5s ease-out forwards;
                 }
 
                 .animate-slideUp {
                     animation: slideUp 0.5s ease-out forwards;
+                    opacity: 0;
+                }
+
+                .animate-slideInRight {
+                    animation: slideInRight 0.5s ease-out forwards;
                     opacity: 0;
                 }
 
@@ -948,11 +984,17 @@ export default function AuthorityRegisterPage() {
                     animation: glow 2s infinite;
                 }
 
+                .animate-pulse-slow {
+                    animation: pulse 2s ease-in-out infinite;
+                }
+
                 .delay-100 { animation-delay: 0.1s; }
                 .delay-200 { animation-delay: 0.2s; }
                 .delay-300 { animation-delay: 0.3s; }
                 .delay-400 { animation-delay: 0.4s; }
                 .delay-500 { animation-delay: 0.5s; }
+                .delay-600 { animation-delay: 0.6s; }
+                .delay-700 { animation-delay: 0.7s; }
 
                 .input-field {
                     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -986,6 +1028,25 @@ export default function AuthorityRegisterPage() {
                 .card-bg {
                     background: rgba(255, 255, 255, 0.85);
                     backdrop-filter: blur(8px);
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .card-bg::before {
+                    content: '';
+                    position: absolute;
+                    top: -50%;
+                    left: -50%;
+                    width: 200%;
+                    height: 200%;
+                    background: linear-gradient(
+                        45deg,
+                        transparent 30%,
+                        rgba(255, 255, 255, 0.1) 50%,
+                        transparent 70%
+                    );
+                    animation: shimmer 8s linear infinite;
+                    pointer-events: none;
                 }
 
                 .divider {
@@ -1027,6 +1088,26 @@ export default function AuthorityRegisterPage() {
 
                 .button-base {
                     transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .button-base::after {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 0;
+                    height: 0;
+                    border-radius: 50%;
+                    background: rgba(255, 255, 255, 0.3);
+                    transform: translate(-50%, -50%);
+                    transition: width 0.6s, height 0.6s;
+                }
+
+                .button-base:active::after {
+                    width: 300px;
+                    height: 300px;
                 }
 
                 .button-base:active {
@@ -1101,6 +1182,41 @@ export default function AuthorityRegisterPage() {
                     background: #059669;
                 }
 
+                /* Login Button Styles */
+                .login-button {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 8px 16px;
+                    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+                    border: 1.5px solid #86efac;
+                    border-radius: 40px;
+                    color: #166534;
+                    font-weight: 600;
+                    font-size: 14px;
+                    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    cursor: pointer;
+                    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.1);
+                }
+
+                .login-button:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+                    border-color: #4ade80;
+                }
+
+                .login-button:active {
+                    transform: translateY(0) scale(0.95);
+                }
+
+                .login-button svg {
+                    transition: transform 0.3s ease;
+                }
+
+                .login-button:hover svg {
+                    transform: translateX(3px);
+                }
+
                 /* Mobile Responsive Styles */
                 @media (max-width: 640px) {
                     .input-field {
@@ -1154,6 +1270,11 @@ export default function AuthorityRegisterPage() {
                     input.pl-16 {
                         padding-left: 80px !important;
                     }
+
+                    .login-button {
+                        padding: 6px 12px;
+                        font-size: 13px;
+                    }
                 }
 
                 /* Prevent zoom on select in iOS */
@@ -1189,6 +1310,11 @@ export default function AuthorityRegisterPage() {
                     .flex.items-center.gap-2 {
                         gap: 6px !important;
                     }
+
+                    .login-button {
+                        padding: 4px 10px;
+                        font-size: 12px;
+                    }
                 }
 
                 /* Better spacing for very small devices */
@@ -1222,40 +1348,99 @@ export default function AuthorityRegisterPage() {
                     outline: 2px solid #16a34a;
                     outline-offset: 2px;
                 }
+
+                /* Animated background orbs */
+                .orb {
+                    position: absolute;
+                    border-radius: 50%;
+                    filter: blur(60px);
+                    opacity: 0.15;
+                    animation: float 8s ease-in-out infinite;
+                }
+
+                .orb-1 {
+                    top: 10%;
+                    right: 5%;
+                    width: 300px;
+                    height: 300px;
+                    background: #4ade80;
+                    animation-delay: 0s;
+                }
+
+                .orb-2 {
+                    bottom: 10%;
+                    left: 5%;
+                    width: 250px;
+                    height: 250px;
+                    background: #22c55e;
+                    animation-delay: -2s;
+                }
+
+                .orb-3 {
+                    top: 40%;
+                    left: 30%;
+                    width: 200px;
+                    height: 200px;
+                    background: #86efac;
+                    animation-delay: -4s;
+                }
             `}</style>
 
             <div className="min-h-screen flex items-center justify-center p-4 animate-fadeIn">
-                <div className="w-full max-w-3xl">
-                    {/* Subtle background orbs */}
-                    <div className="absolute inset-0 -z-10 overflow-hidden">
-                        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-                        <div className="absolute -bottom-1/4 left-1/4 w-72 h-72 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-lime-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
-                    </div>
+                <div className="w-full max-w-3xl relative">
+                    {/* Animated background orbs */}
+                    <div className="orb orb-1"></div>
+                    <div className="orb orb-2"></div>
+                    <div className="orb orb-3"></div>
 
-                    {/* Header */}
+                    {/* Header with Login Button */}
                     <div className="mb-8 animate-slideUp">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="header-icon">
-                                <Shield className="w-9 h-9 text-green-700" />
+                        <div className="flex items-center justify-between flex-wrap gap-4">
+                            <div className="flex items-center gap-3">
+                                <div className="header-icon animate-pulse-slow">
+                                    <Shield className="w-9 h-9 text-green-700" />
+                                </div>
+                                <h1 className="text-3xl font-bold text-green-900 tracking-tight">
+                                    {t.title}
+                                </h1>
                             </div>
-                            <h1 className="text-3xl font-bold text-green-900 tracking-tight">
-                                {t.title}
-                            </h1>
+                            
+                            {/* Login Button for already registered users */}
+                            <button
+                                onClick={() => router.push(`/${locale}/authority/login`)}
+                                className="login-button animate-slideInRight"
+                            >
+                                <LogIn className="w-4 h-4" />
+                                <span>{t.loginHere}</span>
+                            </button>
                         </div>
-                        <p className="text-base text-green-700/75 leading-relaxed font-semibold">
+                        <p className="text-base text-green-700/75 leading-relaxed font-semibold mt-4">
                             {t.subtitle}
                         </p>
-                        <p className="text-sm text-green-600/70 mt-2 font-semibold">
-                            🏛️ {t.govService}
+                        <p className="text-sm text-green-600/70 mt-2 font-semibold flex items-center gap-2">
+                            <span className="animate-float">🏛️</span>
+                            <span>{t.govService}</span>
+                        </p>
+                    </div>
+
+                    {/* Already registered message for mobile */}
+                    <div className="sm:hidden mb-4 text-center animate-slideUp delay-100">
+                        <p className="text-sm text-green-700">
+                            {t.alreadyRegistered}{" "}
+                            <button
+                                onClick={() => router.push(`/${locale}/authority/login`)}
+                                className="text-green-600 font-semibold underline underline-offset-2 hover:text-green-700 transition-colors"
+                            >
+                                {t.loginHere}
+                            </button>
                         </p>
                     </div>
 
                     {/* Error Alert */}
                     {err && (
-                        <div className="mb-6 p-4 rounded-2xl border border-red-200 bg-red-50/80 animate-slideUp delay-100">
+                        <div className="mb-6 p-4 rounded-2xl border border-red-200 bg-red-50/80 animate-slideUp delay-200">
                             <div className="flex items-start gap-3 text-red-700">
-                                <FiAlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                                <FiAlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0 animate-pulse" />
                                 <span className="text-sm leading-snug">
                                     {err}
                                 </span>
@@ -1264,12 +1449,12 @@ export default function AuthorityRegisterPage() {
                     )}
 
                     {/* Main Form Card */}
-                    <div className="card-bg border border-green-100 rounded-3xl shadow-lg overflow-hidden animate-slideUp delay-200">
+                    <div className="card-bg border border-green-100 rounded-3xl shadow-lg overflow-hidden animate-slideUp delay-300">
                         <div className="p-6 sm:p-8">
-                            {/* Role Selection */}
-                            <div className="mb-8">
+                            {/* Role Selection with animation */}
+                            <div className="mb-8 animate-fadeIn delay-400">
                                 <label className="text-sm font-semibold text-green-900 mb-3 flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                    <Building2 className="w-4 h-4 text-green-600 flex-shrink-0 animate-float" />
                                     <span className="truncate">{t.role}</span>
                                 </label>
                                 <div className="relative">
@@ -1285,7 +1470,7 @@ export default function AuthorityRegisterPage() {
                                         ))}
                                     </select>
                                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-green-600">
-                                        <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <svg className="fill-current h-5 w-5 animate-pulse-slow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                             <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                                         </svg>
                                     </div>
@@ -1294,14 +1479,14 @@ export default function AuthorityRegisterPage() {
 
                             {/* Personal Information Section */}
                             <div className="mb-8">
-                                <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
-                                    <User className="w-5 h-5" />
+                                <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2 animate-fadeIn delay-500">
+                                    <User className="w-5 h-5 animate-float" />
                                     Personal Information
                                 </h3>
 
                                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
                                     {/* Name */}
-                                    <div className="col-span-1">
+                                    <div className="col-span-1 animate-fadeIn delay-600">
                                         <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                             <User className="w-4 h-4 text-green-600 flex-shrink-0" />
                                             <span className="truncate">{t.fullName}</span>
@@ -1311,15 +1496,14 @@ export default function AuthorityRegisterPage() {
                                             onChange={(e) => setName(e.target.value)}
                                             onBlur={() => setTouched(prev => ({ ...prev, name: true }))}
                                             onKeyPress={handleKeyPress}
-                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${
-                                                touched.name && !name.trim() ? 'error' : ''
-                                            }`}
+                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${touched.name && !name.trim() ? 'error' : ''
+                                                }`}
                                             placeholder={t.enterFullName}
                                         />
                                     </div>
 
                                     {/* Email */}
-                                    <div className="col-span-1">
+                                    <div className="col-span-1 animate-fadeIn delay-700">
                                         <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                             <Mail className="w-4 h-4 text-green-600 flex-shrink-0" />
                                             <span className="truncate">{t.email}</span>
@@ -1329,9 +1513,8 @@ export default function AuthorityRegisterPage() {
                                             onChange={(e) => setEmail(e.target.value)}
                                             onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
                                             onKeyPress={handleKeyPress}
-                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${
-                                                touched.email && (!email.trim() || !email.includes('@')) ? 'error' : ''
-                                            }`}
+                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${touched.email && (!email.trim() || !email.includes('@')) ? 'error' : ''
+                                                }`}
                                             placeholder={t.enterEmail}
                                             type="email"
                                             inputMode="email"
@@ -1340,7 +1523,7 @@ export default function AuthorityRegisterPage() {
                                 </div>
 
                                 {/* Password */}
-                                <div className="mt-4">
+                                <div className="mt-4 animate-fadeIn" style={{ animationDelay: '0.8s' }}>
                                     <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                         <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
                                         <span className="truncate">{t.password}</span>
@@ -1351,9 +1534,8 @@ export default function AuthorityRegisterPage() {
                                             onChange={(e) => handlePasswordChange(e.target.value)}
                                             onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
                                             onKeyPress={handleKeyPress}
-                                            className={`input-field w-full rounded-2xl px-4 py-3 pr-12 outline-none text-green-900 placeholder-green-400/50 text-base ${
-                                                touched.password && !isPasswordValid() ? 'error' : ''
-                                            }`}
+                                            className={`input-field w-full rounded-2xl px-4 py-3 pr-12 outline-none text-green-900 placeholder-green-400/50 text-base ${touched.password && !isPasswordValid() ? 'error' : ''
+                                                }`}
                                             type={showPassword ? "text" : "password"}
                                             placeholder={t.enterPassword}
                                         />
@@ -1376,16 +1558,14 @@ export default function AuthorityRegisterPage() {
                                         {[1, 2, 3, 4, 5].map((index) => (
                                             <div
                                                 key={index}
-                                                className={`strength-segment ${
-                                                    passwordStrength.hasMinLength && index <= 5 ? 'active' : ''
-                                                } ${
-                                                    passwordStrength.hasMinLength &&
-                                                    passwordStrength.hasUppercase &&
-                                                    passwordStrength.hasLowercase &&
-                                                    passwordStrength.hasNumber &&
-                                                    passwordStrength.hasSpecialChar &&
-                                                    index <= 5 ? 'strong' : ''
-                                                }`}
+                                                className={`strength-segment ${passwordStrength.hasMinLength && index <= 5 ? 'active' : ''
+                                                    } ${passwordStrength.hasMinLength &&
+                                                        passwordStrength.hasUppercase &&
+                                                        passwordStrength.hasLowercase &&
+                                                        passwordStrength.hasNumber &&
+                                                        passwordStrength.hasSpecialChar &&
+                                                        index <= 5 ? 'strong' : ''
+                                                    }`}
                                             />
                                         ))}
                                     </div>
@@ -1430,7 +1610,7 @@ export default function AuthorityRegisterPage() {
 
                                 <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 mt-4">
                                     {/* Mobile with +91 prefix */}
-                                    <div className="col-span-1">
+                                    <div className="col-span-1 animate-fadeIn" style={{ animationDelay: '0.9s' }}>
                                         <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                             <Phone className="w-4 h-4 text-green-600 flex-shrink-0" />
                                             <span className="truncate">{t.mobile}</span>
@@ -1446,9 +1626,8 @@ export default function AuthorityRegisterPage() {
                                                 onChange={(e) => handleMobileChange(e.target.value)}
                                                 onBlur={() => setTouched(prev => ({ ...prev, mobile: true }))}
                                                 onKeyPress={handleKeyPress}
-                                                className={`input-field w-full rounded-2xl pl-16 pr-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${
-                                                    touched.mobile && mobile && !validateIndianMobile(mobile) ? 'error' : ''
-                                                }`}
+                                                className={`input-field w-full rounded-2xl pl-16 pr-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${touched.mobile && mobile && !validateIndianMobile(mobile) ? 'error' : ''
+                                                    }`}
                                                 placeholder={t.enterMobile}
                                                 inputMode="numeric"
                                                 type="tel"
@@ -1471,7 +1650,7 @@ export default function AuthorityRegisterPage() {
                                     </div>
 
                                     {/* Aadhaar */}
-                                    <div className="col-span-1">
+                                    <div className="col-span-1 animate-fadeIn" style={{ animationDelay: '1s' }}>
                                         <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                             <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
                                             <span className="truncate">{t.aadhaar}</span>
@@ -1481,9 +1660,8 @@ export default function AuthorityRegisterPage() {
                                             onChange={(e) => setAadhaar(e.target.value.replace(/\D/g, '').slice(0, 12))}
                                             onBlur={() => setTouched(prev => ({ ...prev, aadhaar: true }))}
                                             onKeyPress={handleKeyPress}
-                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${
-                                                touched.aadhaar && !validateAadhaar(aadhaar) ? 'error' : ''
-                                            }`}
+                                            className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base ${touched.aadhaar && !validateAadhaar(aadhaar) ? 'error' : ''
+                                                }`}
                                             placeholder={t.enterAadhaar}
                                             inputMode="numeric"
                                         />
@@ -1494,7 +1672,7 @@ export default function AuthorityRegisterPage() {
                                 </div>
 
                                 {/* Office Address */}
-                                <div className="mt-4">
+                                <div className="mt-4 animate-fadeIn" style={{ animationDelay: '1.1s' }}>
                                     <label className="text-sm font-semibold text-green-900 mb-2 flex items-center gap-2">
                                         <Home className="w-4 h-4 text-green-600 flex-shrink-0" />
                                         <span className="truncate">{t.officeAddress}</span>
@@ -1504,9 +1682,8 @@ export default function AuthorityRegisterPage() {
                                         onChange={(e) => setOfficeAddress(e.target.value)}
                                         onBlur={() => setTouched(prev => ({ ...prev, officeAddress: true }))}
                                         onKeyPress={handleKeyPress}
-                                        className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base resize-none ${
-                                            touched.officeAddress && !officeAddress.trim() ? 'error' : ''
-                                        }`}
+                                        className={`input-field w-full rounded-2xl px-4 py-3 outline-none text-green-900 placeholder-green-400/50 text-base resize-none ${touched.officeAddress && !officeAddress.trim() ? 'error' : ''
+                                            }`}
                                         rows={3}
                                         placeholder={t.enterOfficeAddress}
                                     />
@@ -1514,15 +1691,15 @@ export default function AuthorityRegisterPage() {
                             </div>
 
                             {/* Location Information Section */}
-                            <div>
+                            <div className="animate-fadeIn" style={{ animationDelay: '1.2s' }}>
                                 <h3 className="text-lg font-bold text-green-900 mb-4 flex items-center gap-2">
-                                    <MapPin className="w-5 h-5" />
+                                    <MapPin className="w-5 h-5 animate-float" />
                                     Location Information
                                 </h3>
 
                                 <div className="space-y-4">
                                     {/* District */}
-                                    <div>
+                                    <div className="animate-fadeIn" style={{ animationDelay: '1.3s' }}>
                                         <label className="text-sm font-semibold text-green-900 mb-2">
                                             {t.district}
                                         </label>
@@ -1578,7 +1755,7 @@ export default function AuthorityRegisterPage() {
 
                                     {/* Taluk (if needed) */}
                                     {needsTaluk && (
-                                        <div>
+                                        <div className="animate-fadeIn" style={{ animationDelay: '1.4s' }}>
                                             <label className="text-sm font-semibold text-green-900 mb-2">
                                                 {t.taluk}
                                             </label>
@@ -1637,7 +1814,7 @@ export default function AuthorityRegisterPage() {
 
                                     {/* Village (if needed) */}
                                     {needsVillage && (
-                                        <div>
+                                        <div className="animate-fadeIn" style={{ animationDelay: '1.5s' }}>
                                             <label className="text-sm font-semibold text-green-900 mb-2">
                                                 {t.village}
                                             </label>
@@ -1695,7 +1872,7 @@ export default function AuthorityRegisterPage() {
 
                                     {/* Panchayat (for village roles) */}
                                     {needsPanchayat && (
-                                        <div>
+                                        <div className="animate-fadeIn" style={{ animationDelay: '1.6s' }}>
                                             <label className="text-sm font-semibold text-green-900 mb-2">
                                                 {t.panchayat}
                                             </label>
@@ -1757,7 +1934,7 @@ export default function AuthorityRegisterPage() {
 
                                     {/* Gram Panchayat ID (for village roles) */}
                                     {(role === "pdo" || role === "village_incharge") && (
-                                        <div>
+                                        <div className="animate-fadeIn" style={{ animationDelay: '1.7s' }}>
                                             <label className="text-sm font-semibold text-green-900 mb-2">
                                                 {t.gramPanchayatId}
                                             </label>
@@ -1786,7 +1963,9 @@ export default function AuthorityRegisterPage() {
                                   shadow-md hover:shadow-lg
                                   focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2
                                   disabled:opacity-60 disabled:cursor-not-allowed
-                                  flex items-center justify-center gap-2"
+                                  flex items-center justify-center gap-2
+                                  animate-fadeIn"
+                                style={{ animationDelay: '1.8s' }}
                             >
                                 {loading ? (
                                     <>
@@ -1795,17 +1974,40 @@ export default function AuthorityRegisterPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <Shield className="w-5 h-5" />
+                                        <Shield className="w-5 h-5 animate-pulse-slow" />
                                         <span>{t.register}</span>
                                     </>
                                 )}
                             </button>
+
+                            {/* Divider for mobile login option */}
+                            <div className="mt-6 sm:hidden">
+                                <div className="divider animate-fadeIn" style={{ animationDelay: '1.9s' }}>
+                                    <span>OR</span>
+                                </div>
+                                <button
+                                    onClick={() => router.push(`/${locale}/authority/login`)}
+                                    className="w-full py-3 px-4 rounded-2xl border-2 border-green-200 bg-white/50
+                                             text-green-700 font-semibold text-sm
+                                             flex items-center justify-center gap-2
+                                             hover:bg-green-50 hover:border-green-300
+                                             transition-all duration-300
+                                             animate-fadeIn"
+                                    style={{ animationDelay: '2s' }}
+                                >
+                                    <LogIn className="w-4 h-4" />
+                                    <span>{t.loginHere}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     {/* Footer Note */}
-                    <div className="mt-8 text-center text-sm text-green-700/70 font-semibold animate-fadeIn" style={{ animationDelay: '0.5s' }}>
-                        <p>🏛️ {t.joinAuthority}</p>
+                    <div className="mt-8 text-center text-sm text-green-700/70 font-semibold animate-fadeIn" style={{ animationDelay: '2.1s' }}>
+                        <p className="flex items-center justify-center gap-2">
+                            <span className="animate-float">🏛️</span>
+                            <span>{t.joinAuthority}</span>
+                        </p>
                     </div>
                 </div>
             </div>
