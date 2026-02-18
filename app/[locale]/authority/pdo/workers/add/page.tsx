@@ -1,3 +1,4 @@
+// app/[locale]/authority/pdo/workers/add/page.tsx
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -103,7 +104,11 @@ export default function AddWorkerPage() {
                         { value: "Mechanic", label: "Mechanic" },
                         { value: "Other", label: "Other" }
                     ]
-                }
+                },
+                dashboard: "Dashboard",
+                workers: "Workers",
+                issues: "Issues",
+                profile: "Profile"
             },
             kn: {
                 title: "ಹೊಸ ಕೆಲಸಗಾರರನ್ನು ಸೇರಿಸಿ",
@@ -176,7 +181,11 @@ export default function AddWorkerPage() {
                         { value: "Mechanic", label: "ಮೆಕ್ಯಾನಿಕ್" },
                         { value: "Other", label: "ಇತರೆ" }
                     ]
-                }
+                },
+                dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+                workers: "ಕೆಲಸಗಾರರು",
+                issues: "ಸಮಸ್ಯೆಗಳು",
+                profile: "ಪ್ರೊಫೈಲ್"
             },
             hi: {
                 title: "नया कार्यकर्ता जोड़ें",
@@ -249,7 +258,11 @@ export default function AddWorkerPage() {
                         { value: "Mechanic", label: "मैकेनिक" },
                         { value: "Other", label: "अन्य" }
                     ]
-                }
+                },
+                dashboard: "डैशबोर्ड",
+                workers: "कार्यकर्ता",
+                issues: "समस्याएँ",
+                profile: "प्रोफ़ाइल"
             },
         };
         return L[locale] || L.en;
@@ -348,19 +361,24 @@ export default function AddWorkerPage() {
             const workerData = {
                 ...formData,
                 panchayatId,
+                panchayatName,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
                 assignedIssues: 0,
                 completedIssues: 0,
                 rating: 0,
                 // Parse skills from comma-separated string to array
-                skills: formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill)
+                skills: formData.skills ? formData.skills.split(',').map(skill => skill.trim()).filter(skill => skill) : []
             };
 
             await addDoc(collection(db, "workers"), workerData);
 
             toast.success(t.success);
-            router.push(`/${locale}/authority/pdo/workers`);
+            
+            // Navigate back to workers list
+            setTimeout(() => {
+                router.push(`/${locale}/authority/pdo/workers`);
+            }, 1500);
         } catch (error) {
             console.error("Error adding worker:", error);
             toast.error(t.error);
@@ -709,7 +727,7 @@ export default function AddWorkerPage() {
                         >
                             <FiHome className="w-5 h-5 text-blue-600/70" />
                             <span className="text-xs mt-1 font-medium text-blue-700/70">
-                                Dashboard
+                                {t.dashboard}
                             </span>
                         </button>
 
@@ -717,9 +735,9 @@ export default function AddWorkerPage() {
                             className="flex flex-col items-center justify-center p-3 rounded-xl transition-all hover:bg-blue-50"
                             onClick={() => router.push(`/${locale}/authority/pdo/workers`)}
                         >
-                            <FiUser className="w-5 h-5 text-blue-700" />
+                            <FiUsers className="w-5 h-5 text-blue-700" />
                             <span className="text-xs mt-1 font-medium text-blue-800 font-bold">
-                                Workers
+                                {t.workers}
                             </span>
                         </button>
 
@@ -729,7 +747,7 @@ export default function AddWorkerPage() {
                         >
                             <FiFileText className="w-5 h-5 text-blue-600/70" />
                             <span className="text-xs mt-1 font-medium text-blue-700/70">
-                                Issues
+                                {t.issues}
                             </span>
                         </button>
 
@@ -739,7 +757,7 @@ export default function AddWorkerPage() {
                         >
                             <FiUser className="w-5 h-5 text-blue-600/70" />
                             <span className="text-xs mt-1 font-medium text-blue-700/70">
-                                Profile
+                                {t.profile}
                             </span>
                         </button>
                     </div>
