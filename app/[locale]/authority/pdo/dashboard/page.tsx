@@ -96,6 +96,7 @@ export default function PdoDashboardPage() {
         resolved: "Resolved",
         inProgress: "In Progress",
         fundRequest: "Fund Request",
+        assign: "Assign",
         cards: {
           inbox: "Inbox (VI Verified)",
           assigned: "Assigned",
@@ -144,6 +145,7 @@ export default function PdoDashboardPage() {
         resolved: "ಪರಿಹಾರಗೊಂಡ",
         inProgress: "ಪ್ರಗತಿಯಲ್ಲಿದೆ",
         fundRequest: "ನಿಧಿ ವಿನಂತಿ",
+        assign: "ನಿಯೋಜಿಸು",
         cards: {
           inbox: "ಇನ್‌ಬಾಕ್ಸ್ (VI ಪರಿಶೀಲನೆ)",
           assigned: "ನಿಯೋಜಿಸಲಾಗಿದೆ",
@@ -192,6 +194,7 @@ export default function PdoDashboardPage() {
         resolved: "हल हो चुकी",
         inProgress: "प्रगति में",
         fundRequest: "फंड रिक्वेस्ट",
+        assign: "असाइन करें",
         cards: {
           inbox: "इनबॉक्स (VI Verified)",
           assigned: "Assigned",
@@ -731,7 +734,7 @@ export default function PdoDashboardPage() {
             >
               <FiSend className="w-5 h-5 text-green-600/70" />
               <span className="text-xs mt-1 font-medium text-green-700/70">
-                Assign
+                {t.assign}
               </span>
             </button>
 
