@@ -28,6 +28,8 @@ import {
   FiPlayCircle,
   FiActivity,
   FiDollarSign,
+  FiBriefcase,
+  FiUserPlus,
 } from "react-icons/fi";
 
 type Locale = "en" | "kn" | "hi";
@@ -56,6 +58,7 @@ export default function PdoDashboardPage() {
   const [user, setUser] = useState<any>(null);
   const [panchayatId, setPanchayatId] = useState("");
   const [totalActivities, setTotalActivities] = useState(0);
+  const [workerCount, setWorkerCount] = useState(0);
 
   const didInit = useRef(false);
   const navLock = useRef(false);
@@ -90,6 +93,8 @@ export default function PdoDashboardPage() {
         tapToResolved: "View resolved issues",
         tapToAll: "View all issues in your panchayat",
         tapToFundRequest: "Request funds for development works",
+        tapToWorkers: "Manage your workers",
+        tapToAddWorker: "Add a new worker",
         stats: "Your Panchayat Statistics",
         totalActivities: "Total Activities",
         pending: "Pending",
@@ -97,6 +102,8 @@ export default function PdoDashboardPage() {
         inProgress: "In Progress",
         fundRequest: "Fund Request",
         assign: "Assign",
+        workers: "Workers",
+        activeWorkers: "Active Workers",
         cards: {
           inbox: "Inbox (VI Verified)",
           assigned: "Assigned",
@@ -111,12 +118,15 @@ export default function PdoDashboardPage() {
           inProgress: "Work started",
           resolved: "Marked resolved",
           all: "Everything in your Panchayat scope",
+          workers: "Manage workers in your panchayat",
         },
         cta: {
           inbox: "Open Inbox",
           all: "View All Issues",
           assignWork: "Assign Work",
           trackProgress: "Track Progress",
+          manageWorkers: "Manage Workers",
+          addWorker: "Add Worker",
         },
         errPerm: "Missing or insufficient permissions.",
       },
@@ -139,6 +149,8 @@ export default function PdoDashboardPage() {
         tapToResolved: "ಪರಿಹರಿಸಿದ ಸಮಸ್ಯೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
         tapToAll: "ನಿಮ್ಮ ಪಂಚಾಯತ್ನ ಎಲ್ಲಾ ಸಮಸ್ಯೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
         tapToFundRequest: "ಅಭಿವೃದ್ಧಿ ಕಾರ್ಯಗಳಿಗೆ ನಿಧಿ ವಿನಂತಿ",
+        tapToWorkers: "ನಿಮ್ಮ ಕೆಲಸಗಾರರನ್ನು ನಿರ್ವಹಿಸಿ",
+        tapToAddWorker: "ಹೊಸ ಕೆಲಸಗಾರರನ್ನು ಸೇರಿಸಿ",
         stats: "ನಿಮ್ಮ ಪಂಚಾಯತ್ ಅಂಕಿಅಂಶಗಳು",
         totalActivities: "ಒಟ್ಟು ಚಟುವಟಿಕೆಗಳು",
         pending: "ಬಾಕಿ ಇವೆ",
@@ -146,6 +158,8 @@ export default function PdoDashboardPage() {
         inProgress: "ಪ್ರಗತಿಯಲ್ಲಿದೆ",
         fundRequest: "ನಿಧಿ ವಿನಂತಿ",
         assign: "ನಿಯೋಜಿಸು",
+        workers: "ಕೆಲಸಗಾರರು",
+        activeWorkers: "ಸಕ್ರಿಯ ಕೆಲಸಗಾರರು",
         cards: {
           inbox: "ಇನ್‌ಬಾಕ್ಸ್ (VI ಪರಿಶೀಲನೆ)",
           assigned: "ನಿಯೋಜಿಸಲಾಗಿದೆ",
@@ -160,12 +174,15 @@ export default function PdoDashboardPage() {
           inProgress: "ಕೆಲಸ ಆರಂಭವಾಗಿದೆ",
           resolved: "ಪರಿಹಾರವಾಗಿದೆ ಎಂದು ಗುರುತು ಹಾಕಲಾಗಿದೆ",
           all: "ನಿಮ್ಮ ವ್ಯಾಪ್ತಿಯ ಎಲ್ಲಾ ಸಮಸ್ಯೆಗಳು",
+          workers: "ನಿಮ್ಮ ಪಂಚಾಯತ್ನಲ್ಲಿ ಕೆಲಸಗಾರರನ್ನು ನಿರ್ವಹಿಸಿ",
         },
         cta: {
           inbox: "ಇನ್‌ಬಾಕ್ಸ್ ತೆರೆ",
           all: "ಎಲ್ಲಾ ಸಮಸ್ಯೆಗಳನ್ನು ವೀಕ್ಷಿಸಿ",
           assignWork: "ಕೆಲಸ ನಿಯೋಜಿಸಿ",
           trackProgress: "ಪ್ರಗತಿ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+          manageWorkers: "ಕೆಲಸಗಾರರನ್ನು ನಿರ್ವಹಿಸಿ",
+          addWorker: "ಕೆಲಸಗಾರರನ್ನು ಸೇರಿಸಿ",
         },
         errPerm: "ಅನುಮತಿ ಇಲ್ಲ ಅಥವಾ ಸಾಕಾಗಿಲ್ಲ.",
       },
@@ -188,6 +205,8 @@ export default function PdoDashboardPage() {
         tapToResolved: "हल किए गए मुद्दे देखें",
         tapToAll: "अपनी पंचायत के सभी मुद्दे देखें",
         tapToFundRequest: "विकास कार्यों के लिए धनराशि का अनुरोध करें",
+        tapToWorkers: "अपने कार्यकर्ताओं का प्रबंधन करें",
+        tapToAddWorker: "नया कार्यकर्ता जोड़ें",
         stats: "आपके पंचायत के आँकड़े",
         totalActivities: "कुल गतिविधियाँ",
         pending: "लंबित",
@@ -195,6 +214,8 @@ export default function PdoDashboardPage() {
         inProgress: "प्रगति में",
         fundRequest: "फंड रिक्वेस्ट",
         assign: "असाइन करें",
+        workers: "कार्यकर्ता",
+        activeWorkers: "सक्रिय कार्यकर्ता",
         cards: {
           inbox: "इनबॉक्स (VI Verified)",
           assigned: "Assigned",
@@ -209,12 +230,15 @@ export default function PdoDashboardPage() {
           inProgress: "काम शुरू",
           resolved: "Resolved mark",
           all: "आपकी scope के सभी issues",
+          workers: "अपनी पंचायत में कार्यकर्ताओं का प्रबंधन करें",
         },
         cta: {
           inbox: "इनबॉक्स खोलें",
           all: "सभी मुद्दे देखें",
           assignWork: "काम असाइन करें",
           trackProgress: "प्रगति ट्रैक करें",
+          manageWorkers: "कार्यकर्ता प्रबंधन",
+          addWorker: "कार्यकर्ता जोड़ें",
         },
         errPerm: "Missing or insufficient permissions.",
       },
@@ -290,6 +314,13 @@ export default function PdoDashboardPage() {
       );
       const qAllIssues = query(col, where("panchayatId", "==", pid));
 
+      // Get worker count
+      const workersQuery = query(
+        collection(db, "workers"),
+        where("panchayatId", "==", pid)
+      );
+      const workersCount = await getCountFromServer(workersQuery);
+
       const [inboxC, assignedC, progressC, resolvedC, allC] =
         await Promise.all([
           getCountFromServer(qInbox),
@@ -304,6 +335,9 @@ export default function PdoDashboardPage() {
       const inProgressCount = progressC.data().count || 0;
       const resolvedCount = resolvedC.data().count || 0;
       const allCount = allC.data().count || 0;
+      const workerCountValue = workersCount.data().count || 0;
+
+      setWorkerCount(workerCountValue);
 
       const newStats: StatCard[] = [
         {
@@ -345,6 +379,16 @@ export default function PdoDashboardPage() {
           icon: <FiCheckSquare className="w-5 h-5" />,
           bgColor: "bg-green-100",
           borderColor: "border-green-200",
+        },
+        {
+          label: t.workers,
+          count: workerCountValue,
+          to: `/${locale}/authority/pdo/workers`,
+          hint: t.hints.workers,
+          color: "text-purple-900",
+          icon: <FiUsers className="w-5 h-5" />,
+          bgColor: "bg-purple-100",
+          borderColor: "border-purple-200",
         },
         {
           label: t.cards.all,
@@ -427,8 +471,8 @@ export default function PdoDashboardPage() {
             <div className="h-4 w-48 bg-gradient-to-r from-green-100 to-emerald-100 rounded pulse"></div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-            {[1, 2, 3, 4, 5].map((i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
                 className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-green-50 p-4 shadow-lg"
@@ -441,7 +485,7 @@ export default function PdoDashboardPage() {
           </div>
 
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
                 className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-green-50 p-5 shadow-lg"
@@ -533,8 +577,8 @@ export default function PdoDashboardPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        {/* Stats Cards - Now includes Workers */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           {stats.map((stat, index) => (
             <button
               key={stat.label}
@@ -546,7 +590,7 @@ export default function PdoDashboardPage() {
                 <div className={`p-2 ${stat.bgColor} rounded-lg`}>
                   {stat.icon}
                 </div>
-                {stat.count > 0 && stat.label !== t.cards.all && (
+                {stat.count > 0 && stat.label !== t.cards.all && stat.label !== t.workers && (
                   <span
                     className={`text-xs font-bold px-2 py-1 rounded-full ${stat.bgColor} ${stat.color}`}
                   >
@@ -584,6 +628,52 @@ export default function PdoDashboardPage() {
         </div>
 
         <div className="space-y-4 mb-8">
+          {/* Worker Management Cards */}
+          <div
+            className="action-card border-2 border-purple-100 rounded-2xl p-5 ripple"
+            onClick={() => router.push(`/${locale}/authority/pdo/workers`)}
+            role="button"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl shadow-lg">
+                <FiUsers className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-purple-900 text-lg">
+                  {t.cta.manageWorkers}
+                </h3>
+                <p className="text-sm text-purple-700/70 mt-1">
+                  {t.tapToWorkers}
+                </p>
+              </div>
+              {workerCount > 0 && (
+                <div className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold">
+                  {workerCount} {t.workers}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+            className="action-card border-2 border-indigo-100 rounded-2xl p-5 ripple"
+            onClick={() => router.push(`/${locale}/authority/pdo/workers/add`)}
+            role="button"
+          >
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl shadow-lg">
+                <FiUserPlus className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-indigo-900 text-lg">
+                  {t.cta.addWorker}
+                </h3>
+                <p className="text-sm text-indigo-700/70 mt-1">
+                  {t.tapToAddWorker}
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div
             className="action-card border-2 border-amber-100 rounded-2xl p-5 ripple"
             onClick={() =>
@@ -614,7 +704,7 @@ export default function PdoDashboardPage() {
           <div
             className="action-card border-2 border-blue-100 rounded-2xl p-5 ripple"
             onClick={() =>
-              router.push(`/${locale}/authority/pdo/issues?status=vi_verified`)
+              router.push(`/${locale}/authority/pdo/assignments`)
             }
             role="button"
           >
@@ -699,15 +789,15 @@ export default function PdoDashboardPage() {
                 </p>
               </div>
               <div className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-bold">
-                {stats[4]?.count ?? 0} Total
+                {stats[5]?.count ?? 0} Total
               </div>
             </div>
           </div>
         </div>
 
-        {/* Bottom nav */}
+        {/* Bottom nav - Updated with 6 items including Workers */}
         <div className="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-lg border-2 border-green-100 rounded-2xl p-2 shadow-xl">
-          <div className="grid grid-cols-5 gap-1">
+          <div className="grid grid-cols-6 gap-1">
             <button
               className="flex flex-col items-center justify-center p-3 rounded-xl transition-all bg-gradient-to-b from-green-100 to-emerald-50"
               onClick={() => router.push(`/${locale}/authority/pdo/dashboard`)}
@@ -715,6 +805,16 @@ export default function PdoDashboardPage() {
               <FiHome className="w-5 h-5 text-green-700" />
               <span className="text-xs mt-1 font-bold text-green-800">
                 {t.dashboard}
+              </span>
+            </button>
+
+            <button
+              className="flex flex-col items-center justify-center p-3 rounded-xl transition-all hover:bg-green-50"
+              onClick={() => router.push(`/${locale}/authority/pdo/workers`)}
+            >
+              <FiUsers className="w-5 h-5 text-green-600/70" />
+              <span className="text-xs mt-1 font-medium text-green-700/70">
+                {t.workers}
               </span>
             </button>
 
