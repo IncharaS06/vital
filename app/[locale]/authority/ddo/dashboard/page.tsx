@@ -1,3 +1,4 @@
+// app/[locale]/authority/ddo/dashboard/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -70,21 +71,21 @@ interface DDOProfile {
   department?: string;
 }
 
-// Simple Card Components
+// Simple Card Components with mobile optimization
 const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`bg-white border border-green-100 rounded-2xl p-6 shadow-sm ${className}`}>
+  <div className={`bg-white border border-green-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm ${className}`}>
     {children}
   </div>
 );
 
 const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`mb-4 ${className}`}>
+  <div className={`mb-3 sm:mb-4 ${className}`}>
     {children}
   </div>
 );
 
 const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <h3 className={`text-lg font-bold text-green-900 ${className}`}>
+  <h3 className={`text-base sm:text-lg font-bold text-green-900 ${className}`}>
     {children}
   </h3>
 );
@@ -112,8 +113,16 @@ export default function DDODashboardPage() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [allIssues, setAllIssues] = useState<any[]>([]);
+  const [animateCards, setAnimateCards] = useState(false);
 
-  /* 🌐 Multilingual text */
+  // Animation effect
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => setAnimateCards(true), 100);
+    }
+  }, [loading]);
+
+  /* 🌐 Multilingual text with full translations */
   const t = useMemo(() => {
     const L: Record<Locale, any> = {
       en: {
@@ -225,6 +234,12 @@ export default function DDODashboardPage() {
           last90Days: "Last 90 Days",
           thisYear: "This Year",
         },
+        mobile: {
+          view: "View",
+          pending: "pending",
+          days: "days",
+          export: "Export",
+        },
       },
       kn: {
         title: "DDO ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
@@ -292,7 +307,7 @@ export default function DDODashboardPage() {
         charts: {
           issueDistribution: "ಸಮಸ್ಯೆ ವಿಧ ವಿತರಣೆ",
           resolutionTrend: "ಪರಿಹಾರ ಟ್ರೆಂಡ್",
-          gpRanking: "ಗ್ರಾಮ ಪಂಚಾಯತ್ ರ‌್ಯಾಂಕಿಂಗ್",
+          gpRanking: "ಗ್ರಾಮ ಪಂಚಾಯತ್ ರ್ಯಾಂಕಿಂಗ್",
           categoryBreakdown: "ವರ್ಗ ವಿಭಜನೆ",
         },
         actions: {
@@ -334,6 +349,12 @@ export default function DDODashboardPage() {
           last30Days: "ಕಳೆದ 30 ದಿನಗಳು",
           last90Days: "ಕಳೆದ 90 ದಿನಗಳು",
           thisYear: "ಈ ವರ್ಷ",
+        },
+        mobile: {
+          view: "ವೀಕ್ಷಿಸಿ",
+          pending: "ಬಾಕಿ",
+          days: "ದಿನಗಳು",
+          export: "ರಫ್ತು",
         },
       },
       hi: {
@@ -444,6 +465,12 @@ export default function DDODashboardPage() {
           last30Days: "पिछले 30 दिन",
           last90Days: "पिछले 90 दिन",
           thisYear: "इस वर्ष",
+        },
+        mobile: {
+          view: "देखें",
+          pending: "लंबित",
+          days: "दिन",
+          export: "निर्यात",
         },
       },
     };
@@ -1162,34 +1189,99 @@ export default function DDODashboardPage() {
 
   return (
     <Screen padded>
-      <div className="max-w-7xl mx-auto">
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+          from { transform: translateX(-10px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.7; }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.5s ease-out forwards;
+        }
+        .animate-slide-in {
+          animation: slideIn 0.4s ease-out forwards;
+        }
+        .animate-pulse-slow {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .hover-scale {
+          transition: transform 0.2s ease;
+        }
+        .hover-scale:hover {
+          transform: scale(1.02);
+        }
+        .mobile-scroll {
+          -webkit-overflow-scrolling: touch;
+          scrollbar-width: thin;
+        }
+        .mobile-scroll::-webkit-scrollbar {
+          height: 4px;
+        }
+        .mobile-scroll::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        .mobile-scroll::-webkit-scrollbar-thumb {
+          background: #10b981;
+          border-radius: 4px;
+        }
+        @media (max-width: 640px) {
+          .mobile-stack {
+            flex-direction: column !important;
+          }
+          .mobile-full {
+            width: 100% !important;
+          }
+          .mobile-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .mobile-text-sm {
+            font-size: 0.75rem !important;
+          }
+          .mobile-p-2 {
+            padding: 0.5rem !important;
+          }
+          .mobile-gap-2 {
+            gap: 0.5rem !important;
+          }
+        }
+      `}</style>
+
+      <div className="max-w-7xl mx-auto px-2 sm:px-4">
         {/* Error Display */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
             <div className="flex items-center gap-2 text-red-700">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <span>{error}</span>
+              <span className="text-xs sm:text-sm">{error}</span>
             </div>
           </div>
         )}
 
         {/* Index Warning */}
         {indexError && (
-          <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-            <div className="flex items-center justify-between">
+          <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-xl animate-fade-in">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <p className="text-sm text-yellow-700">
+                <p className="text-xs sm:text-sm text-yellow-700">
                   {t.indexWarning}
                 </p>
               </div>
               <button
                 onClick={handleCreateIndex}
-                className="px-3 py-1 bg-yellow-600 text-white text-sm rounded-lg hover:bg-yellow-700 transition"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-yellow-600 text-white text-xs sm:text-sm rounded-lg hover:bg-yellow-700 transition font-bold"
               >
                 {t.createIndex}
               </button>
@@ -1197,90 +1289,92 @@ export default function DDODashboardPage() {
           </div>
         )}
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-green-900">
+        {/* Header - Mobile Optimized */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-8">
+          <div className="animate-slide-in">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-green-900">
               {t.title}
             </h1>
-            <p className="text-sm text-green-900/70 mt-1">
+            <p className="text-xs sm:text-sm text-green-900/70 mt-1">
               {t.subtitle} {district && `(${district})`}
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={() => setShowProfileModal(true)}
-              className="px-4 py-2 rounded-xl bg-green-50 border border-green-200 text-green-700 font-bold hover:bg-green-100 transition flex items-center gap-2"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl bg-green-50 border border-green-200 text-green-700 text-xs sm:text-sm font-bold hover:bg-green-100 transition flex items-center justify-center gap-1 sm:gap-2 hover-scale"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              {t.actions.viewProfile}
+              <span className="hidden xs:inline">{t.actions.viewProfile}</span>
+              <span className="xs:hidden">Profile</span>
             </button>
 
-            {/* Report Dropdown */}
-            <div className="relative">
+            {/* Report Dropdown - Mobile Optimized */}
+            <div className="relative flex-1 sm:flex-none">
               <button
                 onClick={() => setShowReportMenu(!showReportMenu)}
-                className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition flex items-center gap-2"
+                className="w-full sm:w-auto px-3 sm:px-4 py-2 rounded-xl bg-blue-600 text-white text-xs sm:text-sm font-bold hover:bg-blue-700 transition flex items-center justify-center gap-1 sm:gap-2 hover-scale"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                {t.reports.download}
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="hidden xs:inline">{t.reports.download}</span>
+                <span className="xs:hidden">Reports</span>
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
               {showReportMenu && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border border-green-100 rounded-xl shadow-lg z-50">
+                <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white border border-green-100 rounded-xl shadow-lg z-50 animate-fade-in">
                   <div className="p-2">
                     <p className="text-xs font-bold text-green-900 px-2 py-1">{t.reports.selectFormat}</p>
                     <div className="space-y-1">
                       <button
                         onClick={() => downloadReport('summary')}
-                        className="w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 sm:py-2 text-xs sm:text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        {t.reports.summary} (JSON)
+                        {t.reports.summary}
                       </button>
                       <button
                         onClick={() => downloadReport('detailed')}
-                        className="w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 sm:py-2 text-xs sm:text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                         </svg>
-                        {t.reports.detailed} (JSON)
+                        {t.reports.detailed}
                       </button>
                       <button
                         onClick={() => downloadReport('excel')}
-                        className="w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 sm:py-2 text-xs sm:text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        {t.reports.excel} (.xlsx)
+                        {t.reports.excel}
                       </button>
                       <button
                         onClick={() => downloadReport('csv')}
-                        className="w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 sm:py-2 text-xs sm:text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
-                        {t.reports.csv} (.csv)
+                        {t.reports.csv}
                       </button>
                       <div className="border-t border-green-100 my-1"></div>
                       <button
                         onClick={() => router.push(`/${locale}/authority/ddo/reports/custom`)}
-                        className="w-full text-left px-3 py-2 text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
+                        className="w-full text-left px-3 py-2.5 sm:py-2 text-xs sm:text-sm text-green-700 hover:bg-green-50 rounded-lg flex items-center gap-2"
                       >
-                        <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
@@ -1294,79 +1388,76 @@ export default function DDODashboardPage() {
 
             <button
               onClick={handleLogout}
-              className="px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 font-bold hover:bg-red-100 transition"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-bold hover:bg-red-100 transition hover-scale"
             >
-              {t.actions.logout}
+              <span className="hidden xs:inline">{t.actions.logout}</span>
+              <span className="xs:hidden">Logout</span>
             </button>
           </div>
         </div>
 
-        {/* Profile Info Bar */}
+        {/* Profile Info Bar - Mobile Optimized */}
         {profile && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-2xl">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="relative">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-100 rounded-xl sm:rounded-2xl animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                <div className="relative flex-shrink-0">
                   {profile.profilePhoto ? (
                     <img
                       src={profile.profilePhoto}
                       alt={profile.name}
-                      className="w-16 h-16 rounded-full border-4 border-white shadow"
+                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-3 sm:border-4 border-white shadow"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-green-600 border-4 border-white shadow flex items-center justify-center">
-                      <span className="text-white text-xl font-bold">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-green-600 border-3 sm:border-4 border-white shadow flex items-center justify-center">
+                      <span className="text-white text-lg sm:text-xl font-bold">
                         {profile.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                    <svg className="w-2 h-2 sm:w-3 sm:h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-extrabold text-green-900">{profile.name}</h3>
-                  <p className="text-sm text-green-700">{profile.designation}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded-full font-bold">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-sm sm:text-lg font-extrabold text-green-900 truncate">{profile.name}</h3>
+                  <p className="text-xs sm:text-sm text-green-700 truncate">{profile.designation}</p>
+                  <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                    <span className="text-xs px-1.5 sm:px-2 py-0.5 bg-green-100 text-green-800 rounded-full font-bold">
                       {profile.role.toUpperCase()}
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-bold ${profile.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                    <span className={`text-xs px-1.5 sm:px-2 py-0.5 rounded-full font-bold ${profile.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                       {profile.verificationStatus === 'verified' ? t.profile.verified : t.profile.pending}
                     </span>
-                    {profile.employeeId && (
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full font-bold">
-                        ID: {profile.employeeId}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
-              <div className="text-sm text-green-700 text-center sm:text-right">
-                <p><span className="font-bold">{t.profile.district}:</span> {profile.district}</p>
-                <p><span className="font-bold">{t.profile.department}:</span> {profile.department}</p>
-                <p><span className="font-bold">{t.profile.lastActive}:</span> {profile.lastActive}</p>
+              <div className="text-xs sm:text-sm text-green-700 text-center sm:text-right w-full sm:w-auto">
+                <p className="truncate"><span className="font-bold hidden sm:inline">{t.profile.district}:</span> {profile.district}</p>
+                <p className="hidden sm:block"><span className="font-bold">{t.profile.lastActive}:</span> {profile.lastActive}</p>
               </div>
             </div>
           </div>
         )}
 
         {loading ? (
-          <div className="flex flex-col justify-center items-center h-64 gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-700"></div>
-            <p className="text-green-700">{t.loading}</p>
+          <div className="flex flex-col justify-center items-center h-48 sm:h-64 gap-3 sm:gap-4">
+            <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-green-700"></div>
+            <p className="text-sm sm:text-base text-green-700 animate-pulse-slow">{t.loading}</p>
           </div>
         ) : stats ? (
           <>
-            {/* Stats Overview Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Stats Overview Cards - Mobile Optimized Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               <StatCard
                 title={t.stats.totalIssues}
                 value={stats.totalIssues}
                 color="blue"
                 icon="📊"
+                mobile={true}
+                delay={0}
               />
               <StatCard
                 title={t.stats.resolved}
@@ -1374,36 +1465,46 @@ export default function DDODashboardPage() {
                 color="green"
                 icon="✅"
                 percentage={stats.totalIssues > 0 ? Math.round((stats.resolvedIssues / stats.totalIssues) * 100) : 0}
+                mobile={true}
+                delay={1}
               />
               <StatCard
                 title={t.stats.pending}
                 value={stats.pendingIssues}
                 color="yellow"
                 icon="⏳"
+                mobile={true}
+                delay={2}
               />
               <StatCard
                 title={t.stats.last30Resolved}
                 value={stats.last30DaysResolved}
                 color="green"
                 icon="📈"
+                mobile={true}
+                delay={3}
               />
             </div>
 
             {/* Second Row Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
               <StatCard
                 title={t.stats.escalationRate}
                 value={stats.totalIssues > 0 ? Math.round((stats.escalatedIssues / stats.totalIssues) * 100) : 0}
                 color="red"
                 icon="🚨"
                 suffix="%"
+                mobile={true}
+                delay={4}
               />
               <StatCard
                 title={t.stats.avgResolution}
                 value={stats.averageResolutionTime}
                 color="purple"
                 icon="⏰"
-                suffix=" days"
+                suffix={` ${t.mobile.days}`}
+                mobile={true}
+                delay={5}
               />
               <StatCard
                 title={t.stats.fundsApproved}
@@ -1411,44 +1512,48 @@ export default function DDODashboardPage() {
                 color="green"
                 icon="💰"
                 suffix=" ₹"
+                mobile={true}
+                delay={6}
               />
               <StatCard
                 title={t.stats.last30Escalated}
                 value={stats.last30DaysEscalated}
                 color="red"
                 icon="⚠️"
+                mobile={true}
+                delay={7}
               />
             </div>
 
             {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-8">
               {/* Issue Distribution Card */}
-              <Card className="lg:col-span-2">
+              <Card className="lg:col-span-2 animate-fade-in">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold text-green-900">
+                  <CardTitle className="text-base sm:text-lg font-bold text-green-900">
                     {t.charts.issueDistribution}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {issueDistribution.length > 0 ? (
-                    <div className="space-y-4">
-                      {issueDistribution.slice(0, 8).map((item) => (
-                        <div key={item.name} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                    <div className="space-y-2 sm:space-y-3">
+                      {issueDistribution.slice(0, 5).map((item, idx) => (
+                        <div key={item.name} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 hover:bg-green-50 p-2 rounded-lg transition-colors" style={{ animationDelay: `${idx * 50}ms` }}>
+                          <div className="flex items-center gap-2 min-w-0">
                             <div
-                              className="w-4 h-4 rounded"
+                              className="w-3 h-3 sm:w-4 sm:h-4 rounded flex-shrink-0"
                               style={{ backgroundColor: item.color }}
                             />
-                            <span className="text-sm font-medium text-green-900">{item.name}</span>
+                            <span className="text-xs sm:text-sm font-medium text-green-900 truncate">{item.name}</span>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <span className="text-sm font-bold text-green-900">{item.value}</span>
+                          <div className="flex items-center gap-2 sm:gap-4 ml-5 sm:ml-0">
+                            <span className="text-xs sm:text-sm font-bold text-green-900">{item.value}</span>
                             <span className="text-xs text-green-600">
-                              ({item.percentage}%)
+                              {item.percentage}%
                             </span>
-                            <div className="w-24 h-2 bg-green-100 rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 sm:h-2 bg-green-100 rounded-full overflow-hidden">
                               <div
-                                className="h-full bg-green-500"
+                                className="h-full bg-green-500 transition-all duration-500"
                                 style={{ width: `${Math.min(item.percentage, 100)}%` }}
                               />
                             </div>
@@ -1457,68 +1562,69 @@ export default function DDODashboardPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-center text-gray-500 py-4">{t.noData}</p>
+                    <p className="text-center text-gray-500 py-4 text-sm">{t.noData}</p>
                   )}
                 </CardContent>
               </Card>
 
               {/* GP Performance */}
-              <Card>
+              <Card className="animate-fade-in" style={{ animationDelay: "100ms" }}>
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold text-green-900">
+                  <CardTitle className="text-base sm:text-lg font-bold text-green-900">
                     {t.charts.gpRanking}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {performanceMetrics?.gpPerformance && performanceMetrics.gpPerformance.length > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       {performanceMetrics.gpPerformance.slice(0, 5).map((gp, index) => (
-                        <div key={gp.name} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-sm font-bold text-green-700">#{index + 1}</span>
-                            <div>
-                              <p className="font-bold text-green-900">{gp.name}</p>
+                        <div key={gp.name} className="flex items-center justify-between p-2 sm:p-3 bg-green-50 rounded-lg hover:shadow-sm transition-shadow" style={{ animationDelay: `${index * 50}ms` }}>
+                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                            <span className="text-xs sm:text-sm font-bold text-green-700 flex-shrink-0">#{index + 1}</span>
+                            <div className="min-w-0">
+                              <p className="text-xs sm:text-sm font-bold text-green-900 truncate">{gp.name}</p>
                               <p className="text-xs text-green-600">
-                                {gp.resolved}/{gp.total} • {gp.averageTime} days avg
+                                {gp.resolved}/{gp.total} • {gp.averageTime}{t.mobile.days}
                               </p>
                             </div>
                           </div>
-                          <span className={`px-2 py-1 rounded text-xs font-bold ${gp.resolutionRate >= 90 ? 'bg-green-100 text-green-800' :
+                          <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-xs font-bold flex-shrink-0 ${
+                            gp.resolutionRate >= 90 ? 'bg-green-100 text-green-800' :
                             gp.resolutionRate >= 75 ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
+                            'bg-red-100 text-red-800'
+                          }`}>
                             {gp.resolutionRate}%
                           </span>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-center text-gray-500 py-4">{t.noData}</p>
+                    <p className="text-center text-gray-500 py-4 text-sm">{t.noData}</p>
                   )}
                 </CardContent>
               </Card>
             </div>
 
-            {/* Recent Escalations */}
-            <Card className="mb-8">
+            {/* Recent Escalations - Mobile Scrollable */}
+            <Card className="mb-4 sm:mb-8 animate-fade-in" style={{ animationDelay: "200ms" }}>
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg font-bold text-green-900">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <CardTitle className="text-base sm:text-lg font-bold text-green-900">
                     {t.tables.recentEscalations}
                   </CardTitle>
                   <div className="flex gap-2">
                     <button
                       onClick={() => downloadReport('excel')}
-                      className="text-sm text-green-700 hover:text-green-900 font-bold flex items-center gap-1"
+                      className="text-xs sm:text-sm text-green-700 hover:text-green-900 font-bold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-green-50 transition-colors"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                      Export
+                      <span className="hidden xs:inline">{t.mobile.export}</span>
                     </button>
                     <button
                       onClick={() => router.push(`/${locale}/authority/ddo/escalations`)}
-                      className="text-sm text-green-700 hover:text-green-900 font-bold"
+                      className="text-xs sm:text-sm text-green-700 hover:text-green-900 font-bold px-2 py-1 rounded-lg hover:bg-green-50 transition-colors"
                     >
                       {t.actions.viewAll} →
                     </button>
@@ -1526,245 +1632,227 @@ export default function DDODashboardPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="text-left text-sm text-green-600 border-b">
-                        <th className="pb-3 font-bold">{t.tables.issueId}</th>
-                        <th className="pb-3 font-bold">{t.tables.category}</th>
-                        <th className="pb-3 font-bold">{t.tables.gp}</th>
-                        <th className="pb-3 font-bold">{t.tables.taluk}</th>
-                        <th className="pb-3 font-bold">{t.tables.daysPending}</th>
-                        <th className="pb-3 font-bold">{t.tables.status}</th>
-                        <th className="pb-3 font-bold">{t.tables.action}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentEscalations.length > 0 ? (
-                        recentEscalations.map((issue) => (
-                          <tr key={issue.id} className="border-b hover:bg-green-50">
-                            <td className="py-3 font-mono text-sm">{issue.displayId}</td>
-                            <td className="py-3">
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                {issue.category || "Unknown"}
-                              </span>
-                            </td>
-                            <td className="py-3">{issue.gramPanchayat}</td>
-                            <td className="py-3">{issue.taluk}</td>
-                            <td className="py-3">
-                              <span className={`px-2 py-1 text-xs rounded-full font-bold ${issue.daysPending > 14 ? 'bg-red-100 text-red-800' :
-                                issue.daysPending > 7 ? 'bg-yellow-100 text-yellow-800' :
+                <div className="overflow-x-auto mobile-scroll -mx-2 sm:mx-0">
+                  <div className="inline-block min-w-full align-middle px-2 sm:px-0">
+                    <table className="min-w-full divide-y divide-green-100">
+                      <thead>
+                        <tr className="text-left text-xs text-green-600">
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.issueId}</th>
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.category}</th>
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.gp}</th>
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.daysPending}</th>
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.status}</th>
+                          <th className="pb-2 sm:pb-3 px-2 sm:px-0 font-bold whitespace-nowrap">{t.tables.action}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-green-50">
+                        {recentEscalations.length > 0 ? (
+                          recentEscalations.slice(0, 3).map((issue, idx) => (
+                            <tr key={issue.id} className="hover:bg-green-50 transition-colors" style={{ animationDelay: `${idx * 50}ms` }}>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0 font-mono text-xs whitespace-nowrap">{issue.displayId}</td>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0">
+                                <span className="px-1.5 sm:px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full whitespace-nowrap">
+                                  {issue.category || "Unknown"}
+                                </span>
+                              </td>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0 text-xs whitespace-nowrap">{issue.gramPanchayat}</td>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0">
+                                <span className={`px-1.5 sm:px-2 py-0.5 text-xs rounded-full font-bold whitespace-nowrap ${
+                                  issue.daysPending > 14 ? 'bg-red-100 text-red-800' :
+                                  issue.daysPending > 7 ? 'bg-yellow-100 text-yellow-800' :
                                   'bg-green-100 text-green-800'
                                 }`}>
-                                {issue.daysPending || 0} days
-                              </span>
-                            </td>
-                            <td className="py-3">
-                              <span className={`px-2 py-1 rounded text-xs font-bold ${issue.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                issue.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                                  issue.status === 'verified' ? 'bg-purple-100 text-purple-800' :
-                                    issue.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                                      'bg-gray-100 text-gray-800'
+                                  {issue.daysPending || 0}{t.mobile.days}
+                                </span>
+                              </td>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0">
+                                <span className={`px-1.5 sm:px-2 py-0.5 rounded text-xs font-bold whitespace-nowrap ${
+                                  issue.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  issue.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
                                 }`}>
-                                {issue.status || 'unknown'}
-                              </span>
-                            </td>
-                            <td className="py-3">
-                              <button
-                                onClick={() => router.push(`/${locale}/authority/ddo/issues/${issue.id}`)}
-                                className="text-green-700 hover:text-green-900 text-sm font-bold"
-                              >
-                                {t.actions.open}
-                              </button>
+                                  {issue.status || 'unknown'}
+                                </span>
+                              </td>
+                              <td className="py-2 sm:py-3 px-2 sm:px-0">
+                                <button
+                                  onClick={() => router.push(`/${locale}/authority/ddo/issues/${issue.id}`)}
+                                  className="text-green-700 hover:text-green-900 text-xs font-bold whitespace-nowrap"
+                                >
+                                  {t.mobile.view}
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="py-4 text-center text-gray-500 text-sm">
+                              {t.noData}
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={7} className="py-4 text-center text-gray-500">
-                            {t.noData}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Action Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Action Cards - Mobile Optimized Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
               <DDOCard
                 title={t.cards.escalations}
-                description="Monitor and handle escalated issues from lower levels"
                 count={stats.escalatedIssues}
                 icon="🚨"
                 onClick={() => router.push(`/${locale}/authority/ddo/escalations`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={0}
               />
               <DDOCard
                 title={t.cards.fundRequests}
-                description="Review and approve fund requests from TDOs"
                 count={stats.fundRequestsPending}
                 icon="💰"
                 onClick={() => router.push(`/${locale}/authority/ddo/fund-requests`)}
                 cta={t.actions.approveFunds}
+                mobile={true}
+                delay={1}
               />
               <DDOCard
                 title={t.cards.analytics}
-                description="Detailed analytics and performance metrics"
                 icon="📈"
                 onClick={() => router.push(`/${locale}/authority/ddo/analytics`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={2}
               />
               <DDOCard
                 title={t.cards.reports}
-                description="Generate detailed reports and insights"
                 icon="📋"
                 onClick={() => setShowReportMenu(true)}
                 cta={t.actions.generateReport}
+                mobile={true}
+                delay={3}
               />
               <DDOCard
                 title={t.cards.unresolved}
-                description="Long-pending unresolved cases"
                 count={stats.pendingIssues}
                 icon="⏳"
                 onClick={() => router.push(`/${locale}/authority/ddo/unresolved`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={4}
               />
               <DDOCard
                 title={t.cards.gpPerformance}
-                description="Gram Panchayat performance tracking"
                 icon="🏆"
                 onClick={() => router.push(`/${locale}/authority/ddo/gp-performance`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={5}
               />
               <DDOCard
                 title={t.cards.category}
-                description="Category-wise analysis and trends"
                 icon="📊"
                 onClick={() => router.push(`/${locale}/authority/ddo/category-analysis`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={6}
               />
               <DDOCard
                 title={t.cards.trends}
-                description="Resolution trends and patterns"
                 icon="📈"
                 onClick={() => router.push(`/${locale}/authority/ddo/trends`)}
                 cta={t.actions.open}
+                mobile={true}
+                delay={7}
               />
             </div>
           </>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500">{t.noData}</p>
+            <p className="text-sm text-gray-500">{t.noData}</p>
           </div>
         )}
       </div>
 
-      {/* Profile Modal */}
+      {/* Profile Modal - Mobile Optimized */}
       {showProfileModal && profile && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-extrabold text-green-900">{t.profile.title}</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 animate-fade-in">
+          <div className="bg-white rounded-xl sm:rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-4 sm:mb-6">
+                <h3 className="text-lg sm:text-xl font-extrabold text-green-900">{t.profile.title}</h3>
                 <button
                   onClick={() => setShowProfileModal(false)}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
 
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative mb-4">
+              <div className="flex flex-col items-center mb-4 sm:mb-6">
+                <div className="relative mb-3 sm:mb-4">
                   {profile.profilePhoto ? (
                     <img
                       src={profile.profilePhoto}
                       alt={profile.name}
-                      className="w-24 h-24 rounded-full border-4 border-green-100"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 border-green-100"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-green-600 border-4 border-green-100 flex items-center justify-center">
-                      <span className="text-white text-3xl font-bold">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-green-600 border-4 border-green-100 flex items-center justify-center">
+                      <span className="text-white text-2xl sm:text-3xl font-bold">
                         {profile.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                 </div>
-                <h4 className="text-lg font-extrabold text-green-900">{profile.name}</h4>
-                <p className="text-sm text-green-700">{profile.designation}</p>
-                <p className="text-xs text-green-600 mt-1">{profile.department}</p>
+                <h4 className="text-base sm:text-lg font-extrabold text-green-900 text-center">{profile.name}</h4>
+                <p className="text-xs sm:text-sm text-green-700 text-center">{profile.designation}</p>
+                <p className="text-xs text-green-600 mt-1 text-center">{profile.department}</p>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-green-900">{t.profile.email}:</span>
-                  <span className="text-sm text-green-700">{profile.email}</span>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex flex-col sm:flex-row sm:justify-between border-b border-green-100 pb-2">
+                  <span className="text-xs sm:text-sm font-bold text-green-900">{t.profile.email}:</span>
+                  <span className="text-xs sm:text-sm text-green-700 break-all">{profile.email}</span>
                 </div>
                 {profile.phone && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-green-900">{t.profile.phone}:</span>
-                    <span className="text-sm text-green-700">{profile.phone}</span>
+                  <div className="flex flex-col sm:flex-row sm:justify-between border-b border-green-100 pb-2">
+                    <span className="text-xs sm:text-sm font-bold text-green-900">{t.profile.phone}:</span>
+                    <span className="text-xs sm:text-sm text-green-700">{profile.phone}</span>
                   </div>
                 )}
-                {profile.employeeId && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-green-900">{t.profile.employeeId}:</span>
-                    <span className="text-sm text-green-700">{profile.employeeId}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-green-900">{t.profile.district}:</span>
-                  <span className="text-sm text-green-700">{profile.district}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between border-b border-green-100 pb-2">
+                  <span className="text-xs sm:text-sm font-bold text-green-900">{t.profile.district}:</span>
+                  <span className="text-xs sm:text-sm text-green-700">{profile.district}</span>
                 </div>
-                {profile.jurisdiction && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-green-900">{t.profile.jurisdiction}:</span>
-                    <span className="text-sm text-green-700">{profile.jurisdiction}</span>
-                  </div>
-                )}
-                {profile.officeAddress && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-green-900">{t.profile.officeAddress}:</span>
-                    <span className="text-sm text-green-700">{profile.officeAddress}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-green-900">{t.profile.role}:</span>
-                  <span className="text-sm text-green-700">{profile.role.toUpperCase()}</span>
+                <div className="flex flex-col sm:flex-row sm:justify-between border-b border-green-100 pb-2">
+                  <span className="text-xs sm:text-sm font-bold text-green-900">{t.profile.role}:</span>
+                  <span className="text-xs sm:text-sm text-green-700">{profile.role.toUpperCase()}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-green-900">{t.profile.verificationStatus}:</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-bold ${profile.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                <div className="flex flex-col sm:flex-row sm:justify-between border-b border-green-100 pb-2">
+                  <span className="text-xs sm:text-sm font-bold text-green-900">{t.profile.verificationStatus}:</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-bold inline-block ${
+                    profile.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                  }`}>
                     {profile.verificationStatus === 'verified' ? t.profile.verified : t.profile.pending}
                   </span>
                 </div>
-                {profile.joinedDate && (
-                  <div className="flex justify-between">
-                    <span className="text-sm font-bold text-green-900">{t.profile.joinedDate}:</span>
-                    <span className="text-sm text-green-700">{profile.joinedDate}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-sm font-bold text-green-900">{t.profile.lastActive}:</span>
-                  <span className="text-sm text-green-700">{profile.lastActive}</span>
-                </div>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowProfileModal(false)}
-                  className="px-4 py-2 border border-green-200 text-green-700 rounded-xl font-bold hover:bg-green-50"
+                  className="w-full sm:w-auto px-4 py-2 border border-green-200 text-green-700 rounded-xl font-bold hover:bg-green-50 transition-colors text-sm"
                 >
                   {t.profile.close}
                 </button>
                 <button
                   onClick={() => router.push(`/${locale}/authority/ddo/profile`)}
-                  className="px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800"
+                  className="w-full sm:w-auto px-4 py-2 bg-green-700 text-white rounded-xl font-bold hover:bg-green-800 transition-colors text-sm"
                 >
                   {t.profile.editProfile}
                 </button>
@@ -1777,14 +1865,16 @@ export default function DDODashboardPage() {
   );
 }
 
-/* 🧩 Stat Card Component */
+/* 🧩 Stat Card Component - Mobile Optimized with Animation */
 function StatCard({
   title,
   value,
   color,
   icon,
   percentage,
-  suffix = ""
+  suffix = "",
+  mobile = false,
+  delay = 0
 }: {
   title: string;
   value: number;
@@ -1792,6 +1882,8 @@ function StatCard({
   icon: string;
   percentage?: number;
   suffix?: string;
+  mobile?: boolean;
+  delay?: number;
 }) {
   const colorClasses = {
     blue: "bg-blue-50 border-blue-100 text-blue-800",
@@ -1801,28 +1893,45 @@ function StatCard({
     purple: "bg-purple-50 border-purple-100 text-purple-800",
   };
 
+  const formattedValue = typeof value === 'number' 
+    ? suffix.includes('₹') 
+      ? `₹${value.toLocaleString()}`
+      : `${value.toLocaleString()}${suffix}`
+    : value;
+
   return (
-    <div className={`${colorClasses[color as keyof typeof colorClasses]} border rounded-2xl p-5`}>
+    <div 
+      className={`${colorClasses[color as keyof typeof colorClasses]} border rounded-xl sm:rounded-2xl p-3 sm:p-5 hover-scale transition-all duration-300`}
+      style={{ animation: `fadeIn 0.5s ease-out ${delay * 0.1}s both` }}
+    >
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold opacity-80 mb-1">{title}</p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-2xl font-extrabold">
-              {typeof value === 'number' && suffix.includes('₹') ? `₹${value.toLocaleString()}` : value.toLocaleString()}{suffix}
+          <p className="text-xs sm:text-sm font-bold opacity-80 mb-0.5 sm:mb-1 truncate">{title}</p>
+          <div className="flex items-baseline gap-1 sm:gap-2 flex-wrap">
+            <h3 className="text-sm sm:text-2xl font-extrabold">
+              {formattedValue}
             </h3>
             {percentage !== undefined && (
-              <span className={`text-sm font-bold ${percentage >= 80 ? 'text-green-600' : percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <span className={`text-xs font-bold ${
+                percentage >= 80 ? 'text-green-600' : 
+                percentage >= 60 ? 'text-yellow-600' : 
+                'text-red-600'
+              }`}>
                 {percentage}%
               </span>
             )}
           </div>
         </div>
-        <span className="text-2xl">{icon}</span>
+        <span className="text-xl sm:text-2xl">{icon}</span>
       </div>
       {percentage !== undefined && (
-        <div className="mt-3 h-2 bg-green-100 rounded-full overflow-hidden">
+        <div className="mt-2 sm:mt-3 h-1.5 sm:h-2 bg-green-100 rounded-full overflow-hidden">
           <div
-            className={`h-full ${percentage >= 80 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
+            className={`h-full transition-all duration-500 ${
+              percentage >= 80 ? 'bg-green-500' : 
+              percentage >= 60 ? 'bg-yellow-500' : 
+              'bg-red-500'
+            }`}
             style={{ width: `${Math.min(percentage, 100)}%` }}
           />
         </div>
@@ -1831,45 +1940,47 @@ function StatCard({
   );
 }
 
-/* 🧩 Enhanced DDO Card */
+/* 🧩 Enhanced DDO Card - Mobile Optimized with Animation */
 function DDOCard({
   title,
-  description,
   count,
   icon,
   cta,
   onClick,
+  mobile = false,
+  delay = 0
 }: {
   title: string;
-  description: string;
   count?: number;
   icon: string;
   cta: string;
   onClick: () => void;
+  mobile?: boolean;
+  delay?: number;
 }) {
   return (
-    <div className="bg-white border border-green-100 rounded-2xl p-5 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow hover:border-green-300">
+    <div 
+      className="bg-white border border-green-100 rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:border-green-300 hover-scale"
+      style={{ animation: `fadeIn 0.5s ease-out ${delay * 0.1}s both` }}
+    >
       <div>
-        <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-extrabold text-green-900">
+        <div className="flex items-start justify-between mb-2 sm:mb-3">
+          <h3 className="text-xs sm:text-lg font-extrabold text-green-900">
             {title}
           </h3>
-          <span className="text-2xl">{icon}</span>
+          <span className="text-lg sm:text-2xl">{icon}</span>
         </div>
-        <p className="text-sm text-green-900/70 mb-4">
-          {description}
-        </p>
       </div>
 
       <div className="flex items-center justify-between">
         {count !== undefined && (
-          <span className="text-sm font-bold text-green-700">
-            {count} pending
+          <span className="text-xs sm:text-sm font-bold text-green-700">
+            {count} {mobile ? '' : 'pending'}
           </span>
         )}
         <button
           onClick={onClick}
-          className="px-4 py-2 rounded-xl bg-green-700 text-white font-extrabold hover:brightness-95 active:scale-[0.99] transition"
+          className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-green-700 text-white text-xs sm:text-sm font-extrabold hover:bg-green-800 active:scale-95 transition-all"
         >
           {cta}
         </button>
