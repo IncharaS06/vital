@@ -13,7 +13,8 @@ import {
   query,
   where,
   orderBy,
-  addDoc
+  addDoc,
+  limit
 } from "firebase/firestore";
 import Screen from "../../../components/Screen";
 import { 
@@ -24,6 +25,7 @@ import {
   FiAlertCircle,
   FiArrowLeft,
   FiChevronRight,
+  FiChevronLeft,
   FiHome,
   FiList,
   FiTrendingUp,
@@ -32,7 +34,14 @@ import {
   FiX,
   FiLoader,
   FiImage,
-  FiNavigation
+  FiNavigation,
+  FiCopy,
+  FiShare2,
+  FiDownload,
+  FiCheckCircle,
+  FiClock,
+  FiCalendar,
+  FiAward
 } from "react-icons/fi";
 import { MdLocationPin, MdTitle, MdDescription, MdPhotoCamera } from "react-icons/md";
 
@@ -153,7 +162,8 @@ const ISSUE_CATEGORIES = [
     sla: 30,
     priority: "Medium",
     titles: ["Potholes on main road", "Road blocked by debris", "Broken bridge/culvert", "Damaged speed breaker", "Custom Title"],
-    icon: "🛣️"
+    icon: "🛣️",
+    color: "from-amber-500 to-orange-500"
   },
   { 
     id: "WS", 
@@ -162,7 +172,8 @@ const ISSUE_CATEGORIES = [
     sla: 7,
     priority: "High",
     titles: ["No water supply", "Water leakage", "Low water pressure", "Contaminated water", "Custom Title"],
-    icon: "💧"
+    icon: "💧",
+    color: "from-blue-500 to-cyan-500"
   },
   { 
     id: "EL", 
@@ -171,7 +182,8 @@ const ISSUE_CATEGORIES = [
     sla: 3,
     priority: "High",
     titles: ["Power outage", "Loose wire/sparking", "Transformer issue", "Voltage fluctuation", "Custom Title"],
-    icon: "⚡"
+    icon: "⚡",
+    color: "from-yellow-500 to-amber-500"
   },
   { 
     id: "SN", 
@@ -180,7 +192,8 @@ const ISSUE_CATEGORIES = [
     sla: 7,
     priority: "Medium",
     titles: ["Garbage not collected", "Overflowing bins", "Public toilet issue", "Bad smell in area", "Custom Title"],
-    icon: "🚮"
+    icon: "🚮",
+    color: "from-green-500 to-emerald-500"
   },
   { 
     id: "HC", 
@@ -189,7 +202,8 @@ const ISSUE_CATEGORIES = [
     sla: 14,
     priority: "High",
     titles: ["PHC closed/unavailable", "Ambulance needed", "Medicine shortage", "Staff unavailable", "Custom Title"],
-    icon: "🏥"
+    icon: "🏥",
+    color: "from-red-500 to-rose-500"
   },
   { 
     id: "ED", 
@@ -198,7 +212,8 @@ const ISSUE_CATEGORIES = [
     sla: 21,
     priority: "Medium",
     titles: ["School facility issue", "No teacher present", "Water/toilet problem", "Classroom damage", "Custom Title"],
-    icon: "🎓"
+    icon: "🎓",
+    color: "from-purple-500 to-indigo-500"
   },
   { 
     id: "SL", 
@@ -207,7 +222,8 @@ const ISSUE_CATEGORIES = [
     sla: 5,
     priority: "Medium",
     titles: ["Streetlight not working", "Flickering light", "Pole damaged", "New streetlight needed", "Custom Title"],
-    icon: "💡"
+    icon: "💡",
+    color: "from-yellow-400 to-yellow-600"
   },
   { 
     id: "DR", 
@@ -216,7 +232,8 @@ const ISSUE_CATEGORIES = [
     sla: 14,
     priority: "Medium",
     titles: ["Drain clogged", "Waterlogging", "Sewage overflow", "Mosquito breeding", "Custom Title"],
-    icon: "🌊"
+    icon: "🌊",
+    color: "from-teal-500 to-cyan-500"
   },
   { 
     id: "OT", 
@@ -225,7 +242,8 @@ const ISSUE_CATEGORIES = [
     sla: 14,
     priority: "Low",
     titles: ["General public issue", "Safety concern", "Government service issue", "Other", "Custom Title"],
-    icon: "📋"
+    icon: "📋",
+    color: "from-gray-500 to-slate-500"
   }
 ];
 
@@ -272,6 +290,8 @@ export default function RaiseIssuePage() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
   
   // Step 1: Location
   const [districtId, setDistrictId] = useState("");
@@ -312,6 +332,7 @@ export default function RaiseIssuePage() {
   const [success, setSuccess] = useState(false);
   const [issueId, setIssueId] = useState("");
   const [error, setError] = useState("");
+  const [showIssueId, setShowIssueId] = useState(false);
 
   // Translations
   const t = useMemo(() => {
@@ -396,7 +417,15 @@ export default function RaiseIssuePage() {
           resolutionDate: "Expected Resolution",
           department: "Assigned Department",
           saveId: "Save this ID for tracking",
-          note: "You'll be notified about updates via SMS/Email"
+          note: "You'll be notified about updates via SMS/Email",
+          copy: "Copy ID",
+          copied: "Copied!",
+          share: "Share",
+          shared: "Shared!",
+          download: "Download Receipt",
+          trackNow: "Track Issue",
+          shareOnWhatsApp: "Share on WhatsApp",
+          shareOnSMS: "Share via SMS"
         },
         nav: {
           dashboard: "Dashboard",
@@ -488,7 +517,15 @@ export default function RaiseIssuePage() {
           resolutionDate: "ನಿರೀಕ್ಷಿತ ಪರಿಹಾರ",
           department: "ನಿಯೋಜಿತ ಇಲಾಖೆ",
           saveId: "ಟ್ರ್ಯಾಕಿಂಗ್‌ಗಾಗಿ ಈ ID ಯನ್ನು ಉಳಿಸಿ",
-          note: "SMS/ಇಮೇಲ್ ಮೂಲಕ ನವೀಕರಣಗಳ ಬಗ್ಗೆ ನಿಮಗೆ ತಿಳಿಸಲಾಗುವುದು"
+          note: "SMS/ಇಮೇಲ್ ಮೂಲಕ ನವೀಕರಣಗಳ ಬಗ್ಗೆ ನಿಮಗೆ ತಿಳಿಸಲಾಗುವುದು",
+          copy: "ID ನಕಲಿಸಿ",
+          copied: "ನಕಲಿಸಲಾಗಿದೆ!",
+          share: "ಹಂಚಿಕೊಳ್ಳಿ",
+          shared: "ಹಂಚಿಕೊಳ್ಳಲಾಗಿದೆ!",
+          download: "ರಶೀದಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ",
+          trackNow: "ಸಮಸ್ಯೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ",
+          shareOnWhatsApp: "WhatsApp ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ",
+          shareOnSMS: "SMS ಮೂಲಕ ಹಂಚಿಕೊಳ್ಳಿ"
         },
         nav: {
           dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
@@ -580,7 +617,15 @@ export default function RaiseIssuePage() {
           resolutionDate: "अपेक्षित समाधान",
           department: "नियत विभाग",
           saveId: "ट्रैकिंग के लिए इस आईडी को सहेजें",
-          note: "आपको एसएमएस/ईमेल के माध्यम से अपडेट के बारे में सूचित किया जाएगा"
+          note: "आपको एसएमएस/ईमेल के माध्यम से अपडेट के बारे में सूचित किया जाएगा",
+          copy: "आईडी कॉपी करें",
+          copied: "कॉपी किया गया!",
+          share: "शेयर करें",
+          shared: "शेयर किया गया!",
+          download: "रसीद डाउनलोड करें",
+          trackNow: "समस्या ट्रैक करें",
+          shareOnWhatsApp: "WhatsApp पर शेयर करें",
+          shareOnSMS: "SMS के माध्यम से शेयर करें"
         },
         nav: {
           dashboard: "डैशबोर्ड",
@@ -928,6 +973,42 @@ export default function RaiseIssuePage() {
     setGpsError("");
   };
 
+  /* ------------------ ISSUE ID HANDLING ------------------ */
+  const copyIssueId = () => {
+    navigator.clipboard.writeText(issueId);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const shareIssueId = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Issue Tracking ID',
+          text: `Track your issue with ID: ${issueId}`,
+          url: window.location.origin,
+        });
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 2000);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      window.open(`https://wa.me/?text=Track%20your%20issue%20with%20ID%3A%20${issueId}`, '_blank');
+    }
+  };
+
+  const downloadReceipt = () => {
+    const element = document.createElement("a");
+    const file = new Blob([`Issue ID: ${issueId}\nCategory: ${selectedCategory?.name}\nDescription: ${description}\nLocation: ${specificLocation}\nExpected Resolution: ${expectedResolutionDate}\nDepartment: ${getDepartmentByCategory(category)}`], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `issue-${issueId}.txt`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
+
   /* ------------------ SUBMIT ISSUE ------------------ */
   const submitIssue = async () => {
     if (!validateStep(5)) return;
@@ -963,7 +1044,7 @@ export default function RaiseIssuePage() {
       const expectedDate = new Date();
       expectedDate.setDate(expectedDate.getDate() + (selectedCategory?.sla || 14));
 
-      // Create issue data - SIMPLIFIED VERSION
+      // Create issue data
       const issueData = {
         // Required fields
         villagerId: user.uid,
@@ -1062,8 +1143,11 @@ export default function RaiseIssuePage() {
   if (loading) {
     return (
       <Screen center>
-        <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin" />
-        <p className="mt-6 text-green-700 font-semibold text-lg animate-pulse">{t.loading}</p>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <div className="w-20 h-20 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+          <p className="text-green-700 font-semibold text-lg animate-pulse">{t.loading}</p>
+          <p className="text-gray-500 text-sm mt-2">Please wait while we load your profile</p>
+        </div>
       </Screen>
     );
   }
@@ -1072,15 +1156,15 @@ export default function RaiseIssuePage() {
     return (
       <Screen padded>
         <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
-            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center animate-fadeIn">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
               <FiAlertCircle className="w-10 h-10 text-red-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Account Verification Required</h2>
-            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-gray-600 mb-8">{error}</p>
             <button
               onClick={() => router.push(`/${locale}/villager/profile`)}
-              className="w-full py-3 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-teal-700"
+              className="w-full py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-teal-700 active:scale-95 transition-all shadow-lg"
             >
               Go to Profile
             </button>
@@ -1093,55 +1177,125 @@ export default function RaiseIssuePage() {
   if (success) {
     return (
       <Screen padded>
-        <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-teal-50 to-blue-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 text-center max-w-2xl w-full">
-            <div className="relative mb-8">
-              <div className="absolute -top-16 left-1/2 transform -translate-x-1/2">
-                <div className="w-32 h-32 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-xl animate-bounce">
-                  <div className="w-24 h-24 bg-white/90 rounded-full flex items-center justify-center">
-                    <FiCheck className="w-16 h-16 text-green-600" />
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+          @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.6); }
+          }
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+          @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+          }
+          .animate-float { animation: float 3s ease-in-out infinite; }
+          .animate-glow { animation: glow 2s ease-in-out infinite; }
+          .animate-slideUp { animation: slideUp 0.5s ease-out forwards; }
+          .animate-scaleIn { animation: scaleIn 0.5s ease-out forwards; }
+          .stagger-1 { animation-delay: 0.1s; }
+          .stagger-2 { animation-delay: 0.2s; }
+          .stagger-3 { animation-delay: 0.3s; }
+          .stagger-4 { animation-delay: 0.4s; }
+          .stagger-5 { animation-delay: 0.5s; }
+        `}</style>
+
+        <div className="min-h-screen bg-gradient-to-br from-emerald-100 via-teal-50 to-blue-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 text-center max-w-2xl w-full animate-scaleIn">
+            
+            {/* Animated Success Icon - Mobile Optimized */}
+            <div className="relative mb-4 sm:mb-6">
+              <div className="absolute -top-12 sm:-top-16 left-1/2 transform -translate-x-1/2">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center shadow-xl animate-float animate-glow">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-white/90 rounded-full flex items-center justify-center">
+                    <FiCheck className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-green-600" />
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="mt-20 mb-8">
-              <h2 className="text-4xl font-bold text-gray-900 mb-3">
-                {t.success.title}
+            {/* Success Messages - Mobile Optimized */}
+            <div className="mt-12 sm:mt-16 md:mt-20 mb-4 sm:mb-6">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 animate-slideUp">
+                🎉 {t.success.title}
               </h2>
-              <p className="text-gray-600 text-lg">{t.success.message}</p>
-              <p className="text-sm text-green-600 mt-2">{t.success.note}</p>
+              <p className="text-xs sm:text-sm text-gray-600 animate-slideUp stagger-1">{t.success.message}</p>
+              <p className="text-xs text-green-600 mt-2 animate-slideUp stagger-2">{t.success.note}</p>
             </div>
             
-            <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200 rounded-2xl p-8 mb-8">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-3">
-                  <span className="text-2xl">🆔</span>
+            {/* Issue ID Card - Fully Mobile Optimized */}
+            <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 mb-4 sm:mb-6 animate-slideUp stagger-3">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <span className="text-xl sm:text-2xl">🆔</span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600">{t.success.issueId}</p>
-                  <p className="text-4xl font-black text-green-600 tracking-wider">{issueId}</p>
+                <div className="text-center sm:text-left">
+                  <p className="text-xs font-medium text-gray-600">{t.success.issueId}</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-black text-green-600 tracking-wider break-all">
+                    {issueId}
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 animate-pulse">{t.success.saveId}</p>
+              
+              {/* Mobile-Optimized Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <button
+                  onClick={copyIssueId}
+                  className="flex items-center justify-center gap-1 sm:gap-2 p-2 sm:p-3 bg-white border-2 border-green-200 rounded-xl hover:bg-green-50 active:scale-95 transition-all"
+                >
+                  <FiCopy className={`w-4 h-4 ${copySuccess ? 'text-green-600' : 'text-gray-600'}`} />
+                  <span className="text-xs sm:text-sm font-semibold">
+                    {copySuccess ? t.success.copied : t.success.copy}
+                  </span>
+                </button>
+                <button
+                  onClick={shareIssueId}
+                  className="flex items-center justify-center gap-1 sm:gap-2 p-2 sm:p-3 bg-white border-2 border-green-200 rounded-xl hover:bg-green-50 active:scale-95 transition-all"
+                >
+                  <FiShare2 className={`w-4 h-4 ${shareSuccess ? 'text-green-600' : 'text-gray-600'}`} />
+                  <span className="text-xs sm:text-sm font-semibold">
+                    {shareSuccess ? t.success.shared : t.success.share}
+                  </span>
+                </button>
+              </div>
+              
+              {/* Download Button - Mobile Optimized */}
+              <button
+                onClick={downloadReceipt}
+                className="w-full flex items-center justify-center gap-2 p-2 sm:p-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-teal-700 active:scale-95 transition-all"
+              >
+                <FiDownload className="w-4 h-4" />
+                <span className="text-xs sm:text-sm">{t.success.download}</span>
+              </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                <p className="text-sm font-semibold text-blue-700 mb-1">
-                  {t.success.resolutionDate}
-                </p>
-                <p className="font-bold text-gray-900">{expectedResolutionDate}</p>
+            {/* Info Cards - Mobile Optimized Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 sm:mb-6 animate-slideUp stagger-4">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3 sm:p-4 text-left">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiCalendar className="w-4 h-4 text-blue-600" />
+                  <p className="text-xs font-semibold text-blue-700">{t.success.resolutionDate}</p>
+                </div>
+                <p className="font-bold text-gray-900 text-sm sm:text-base">{expectedResolutionDate}</p>
+                <p className="text-xs text-blue-600 mt-1">{selectedCategory?.sla} days SLA</p>
               </div>
-              <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-4">
-                <p className="text-sm font-semibold text-purple-700 mb-1">
-                  {t.success.department}
-                </p>
-                <p className="font-bold text-gray-900">{getDepartmentByCategory(category)}</p>
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-3 sm:p-4 text-left">
+                <div className="flex items-center gap-2 mb-2">
+                  <FiAward className="w-4 h-4 text-purple-600" />
+                  <p className="text-xs font-semibold text-purple-700">{t.success.department}</p>
+                </div>
+                <p className="font-bold text-gray-900 text-sm sm:text-base">{getDepartmentByCategory(category)}</p>
+                <p className="text-xs text-purple-600 mt-1">{selectedCategory?.priority} Priority</p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {/* Action Buttons - Mobile Optimized */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-slideUp stagger-5">
               <button
                 onClick={() => {
                   setSuccess(false);
@@ -1156,16 +1310,16 @@ export default function RaiseIssuePage() {
                   setImageDataUrl("");
                   setError("");
                 }}
-                className="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl hover:from-green-600 hover:to-teal-700 font-bold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-teal-700 active:scale-95 transition-all shadow-lg text-sm sm:text-base"
               >
-                <FiPlus className="w-5 h-5" />
+                <FiPlus className="w-4 h-4" />
                 {t.buttons.another}
               </button>
               <button
                 onClick={() => router.push(`/${locale}/villager/my-issues`)}
-                className="px-8 py-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 font-bold shadow hover:shadow-md flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold hover:from-gray-200 hover:to-gray-300 active:scale-95 transition-all shadow text-sm sm:text-base"
               >
-                <FiList className="w-5 h-5" />
+                <FiList className="w-4 h-4" />
                 {t.buttons.track}
               </button>
             </div>
@@ -1195,22 +1349,22 @@ export default function RaiseIssuePage() {
         .animate-pulse-slow { animation: pulse 2s infinite; }
       `}</style>
 
-      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-white">
-        {/* Header */}
-        <div className="p-4 animate-fadeIn">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+      <div className="min-h-screen bg-gradient-to-b from-green-50 via-white to-white pb-24 md:pb-8">
+        {/* Header - Mobile Optimized */}
+        <div className="p-3 sm:p-4 animate-fadeIn">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => router.push(`/${locale}/villager/dashboard`)}
-                className="p-3 rounded-xl border-2 border-green-100 bg-white hover:bg-green-50 active:scale-95 transition-all duration-200"
+                className="p-2 sm:p-3 rounded-xl border-2 border-green-100 bg-white hover:bg-green-50 active:scale-95 transition-all"
               >
-                <FiArrowLeft className="w-5 h-5 text-green-700" />
+                <FiArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-green-700" />
               </button>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-green-900 tracking-tight">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-900 tracking-tight">
                   {t.title}
                 </h1>
-                <p className="text-green-700/80 mt-1 text-sm font-semibold">
+                <p className="text-green-700/80 mt-1 text-xs sm:text-sm font-semibold">
                   {t.subtitle}
                 </p>
               </div>
@@ -1218,12 +1372,12 @@ export default function RaiseIssuePage() {
           </div>
 
           {/* Progress Steps - Mobile Optimized */}
-          <div className="mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-green-100">
+          <div className="mb-4 sm:mb-6 bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-xl border border-green-100">
             <div className="flex items-center justify-between">
               {[1, 2, 3, 4, 5].map((step) => (
                 <div key={step} className="flex items-center flex-1">
                   <div className="flex flex-col items-center flex-1 relative">
-                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-lg md:text-xl font-bold transition-all duration-300 ${
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center text-sm sm:text-base md:text-lg font-bold transition-all duration-300 ${
                       currentStep === step 
                         ? "scale-110 bg-gradient-to-br from-green-500 to-teal-600 text-white shadow-lg ring-4 ring-green-100" 
                         : currentStep > step
@@ -1232,17 +1386,14 @@ export default function RaiseIssuePage() {
                     }`}>
                       {currentStep > step ? "✓" : step}
                     </div>
-                    <p className={`text-xs mt-2 font-bold text-center ${
+                    <p className={`text-[10px] sm:text-xs mt-1 sm:mt-2 font-bold text-center ${
                       currentStep >= step ? "text-green-700" : "text-gray-500"
                     }`}>
                       {t.steps[step as keyof typeof t.steps]}
                     </p>
-                    {currentStep === step && (
-                      <div className="absolute -bottom-2 w-6 h-1 bg-green-500 rounded-full animate-pulse-slow"></div>
-                    )}
                   </div>
                   {step < 5 && (
-                    <div className={`h-1 flex-1 mx-1 md:mx-2 ${
+                    <div className={`h-0.5 sm:h-1 flex-1 mx-0.5 sm:mx-1 ${
                       currentStep > step ? "bg-gradient-to-r from-green-400 to-teal-400" : "bg-gray-200"
                     }`} />
                   )}
@@ -1252,46 +1403,46 @@ export default function RaiseIssuePage() {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="px-4 pb-24">
+        {/* Main Content - Mobile Optimized */}
+        <div className="px-3 sm:px-4 pb-4">
           {(error || gpsError) && (
-            <div className="mb-6 p-4 rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-50 animate-fadeIn">
-              <div className="flex items-start gap-3 text-red-700">
-                <FiAlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-                <span className="text-sm font-bold">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 border-red-200 bg-gradient-to-br from-red-50 to-red-50 animate-fadeIn">
+              <div className="flex items-start gap-2 sm:gap-3 text-red-700">
+                <FiAlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-bold">
                   {error || gpsError}
                 </span>
               </div>
             </div>
           )}
 
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-green-100 animate-fadeIn">
-            <div className="h-2 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500"></div>
+          <div className="bg-white/90 backdrop-blur-xl rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden border border-green-100 animate-fadeIn">
+            <div className="h-1.5 sm:h-2 bg-gradient-to-r from-green-500 via-teal-500 to-blue-500"></div>
             
-            <div className="p-4 md:p-6">
+            <div className="p-3 sm:p-4 md:p-6">
               {/* Step 1: Location */}
               {currentStep === 1 && (
-                <div className="space-y-6 animate-slideIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center text-2xl">
-                      <MdLocationPin className="w-6 h-6 md:w-8 md:h-8 text-green-600" />
+                <div className="space-y-4 sm:space-y-6 animate-slideIn">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-100 to-teal-100 flex items-center justify-center text-xl sm:text-2xl">
+                      <MdLocationPin className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-green-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t.steps[1]}</h2>
-                      <p className="text-gray-600 text-sm">Select the issue location</p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t.steps[1]}</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">Select the issue location</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                         {t.location.district} *
                       </label>
                       <select
                         value={districtId}
                         onChange={(e) => setDistrictId(e.target.value)}
                         disabled={loadingLoc}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white text-sm"
                       >
                         <option value="">{loadingLoc ? t.loading : t.location.selectDistrict}</option>
                         {districts.map(d => (
@@ -1303,14 +1454,14 @@ export default function RaiseIssuePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                         {t.location.taluk} *
                       </label>
                       <select
                         value={talukId}
                         onChange={(e) => setTalukId(e.target.value)}
                         disabled={!districtId || loadingLoc}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60 text-sm"
                       >
                         <option value="">{loadingLoc ? t.loading : t.location.selectTaluk}</option>
                         {taluks.map(t => (
@@ -1322,14 +1473,14 @@ export default function RaiseIssuePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                         {t.location.village} *
                       </label>
                       <select
                         value={villageId}
                         onChange={(e) => setVillageId(e.target.value)}
                         disabled={!talukId || loadingLoc}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60 text-sm"
                       >
                         <option value="">{loadingLoc ? t.loading : t.location.selectVillage}</option>
                         {villages.map(v => (
@@ -1341,14 +1492,14 @@ export default function RaiseIssuePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                         {t.location.panchayat} *
                       </label>
                       <select
                         value={panchayatId}
                         onChange={(e) => setPanchayatId(e.target.value)}
                         disabled={!villageId || loadingLoc || panchayats.length === 0}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white disabled:opacity-60 text-sm"
                       >
                         <option value="">{loadingLoc ? t.loading : t.location.selectPanchayat}</option>
                         {panchayats.map(p => (
@@ -1360,7 +1511,7 @@ export default function RaiseIssuePage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-bold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                         {t.location.specific} <span className="text-gray-500 text-xs">({t.optional})</span>
                       </label>
                       <input
@@ -1368,44 +1519,44 @@ export default function RaiseIssuePage() {
                         value={specificLocation}
                         onChange={(e) => setSpecificLocation(e.target.value)}
                         placeholder="e.g., Near temple, Main road, Market area"
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white text-sm"
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Category */}
+              {/* Step 2: Category - Mobile Optimized */}
               {currentStep === 2 && (
-                <div className="space-y-6 animate-slideIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-2xl">
-                      <MdTitle className="w-6 h-6 md:w-8 md:h-8 text-purple-600" />
+                <div className="space-y-4 sm:space-y-6 animate-slideIn">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center text-xl sm:text-2xl">
+                      <MdTitle className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-purple-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t.steps[2]}</h2>
-                      <p className="text-gray-600 text-sm">Select issue type and title</p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t.steps[2]}</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">Select issue type and title</p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-4">
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 sm:mb-4">
                       {t.category.selectCategory} *
                     </label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                       {ISSUE_CATEGORIES.map(cat => (
                         <button
                           key={cat.id}
                           onClick={() => setCategory(cat.id)}
-                          className={`p-3 md:p-4 rounded-xl md:rounded-2xl border-2 transition-all duration-300 active:scale-95 ${
+                          className={`p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl border-2 transition-all duration-300 active:scale-95 ${
                             category === cat.id
                               ? "border-green-500 bg-gradient-to-br from-green-50 to-teal-50 shadow-lg"
                               : "border-gray-200 hover:border-green-300"
                           }`}
                         >
-                          <div className="text-2xl md:text-3xl mb-2">{cat.icon}</div>
-                          <div className="font-bold text-gray-800 text-xs md:text-sm mb-1 truncate">{cat.name}</div>
-                          <div className="text-xs text-green-600 font-semibold truncate">
+                          <div className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">{cat.icon}</div>
+                          <div className="font-bold text-gray-800 text-[10px] sm:text-xs md:text-sm mb-0.5 sm:mb-1 truncate">{cat.name}</div>
+                          <div className="text-[8px] sm:text-xs text-green-600 font-semibold">
                             {cat.sla}d • {cat.priority}
                           </div>
                         </button>
@@ -1414,15 +1565,15 @@ export default function RaiseIssuePage() {
                   </div>
 
                   {selectedCategory && (
-                    <div className="space-y-4 animate-fadeIn">
+                    <div className="space-y-3 sm:space-y-4 animate-fadeIn">
                       <div>
-                        <label className="block text-sm font-bold text-gray-700 mb-2">
+                        <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                           {t.category.issueTitle} *
                         </label>
                         <select
                           value={selectedTitle}
                           onChange={(e) => setSelectedTitle(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white text-sm"
                         >
                           <option value="">Select a title</option>
                           {titleOptions.map(title => (
@@ -1433,7 +1584,7 @@ export default function RaiseIssuePage() {
 
                       {selectedTitle === "Custom Title" && (
                         <div>
-                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                          <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                             {t.category.customTitle} *
                           </label>
                           <input
@@ -1441,121 +1592,121 @@ export default function RaiseIssuePage() {
                             value={customTitle}
                             onChange={(e) => setCustomTitle(e.target.value)}
                             placeholder="Type your issue title"
-                            className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white"
+                            className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none bg-white text-sm"
                           />
                         </div>
                       )}
 
-                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4">
-                        <p className="text-sm font-bold text-green-700 mb-2">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg sm:rounded-xl p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm font-bold text-green-700 mb-1 sm:mb-2">
                           {t.category.sla}
                         </p>
-                        <p className="font-bold text-gray-900 text-sm">{expectedResolutionDate}</p>
+                        <p className="font-bold text-gray-900 text-xs sm:text-sm">{expectedResolutionDate}</p>
                       </div>
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Step 3: Description */}
+              {/* Step 3: Description - Mobile Optimized */}
               {currentStep === 3 && (
-                <div className="space-y-6 animate-slideIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center text-2xl">
-                      <MdDescription className="w-6 h-6 md:w-8 md:h-8 text-blue-600" />
+                <div className="space-y-4 sm:space-y-6 animate-slideIn">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center text-xl sm:text-2xl">
+                      <MdDescription className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-blue-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t.steps[3]}</h2>
-                      <p className="text-gray-600 text-sm">Describe the issue in detail</p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t.steps[3]}</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">Describe the issue in detail</p>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-1 sm:mb-2">
                       {t.details.description} *
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder={t.details.descriptionPlaceholder}
-                      rows={6}
-                      className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 focus:border-green-500 outline-none resize-none bg-white"
+                      rows={5}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl border-2 border-gray-200 focus:border-green-500 outline-none resize-none bg-white text-sm"
                     />
                     <div className="flex justify-between items-center mt-2">
-                      <p className="text-xs text-gray-500">
+                      <p className="text-[10px] sm:text-xs text-gray-500">
                         {description.length} characters • {t.details.minChars}
                       </p>
-                      <div className={`w-3 h-3 rounded-full ${description.length >= 50 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
+                      <div className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${description.length >= 50 ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></div>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step 4: GPS */}
+              {/* Step 4: GPS - Mobile Optimized */}
               {currentStep === 4 && (
-                <div className="space-y-6 animate-slideIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center text-2xl">
-                      <FiNavigation className="w-6 h-6 md:w-8 md:h-8 text-teal-600" />
+                <div className="space-y-4 sm:space-y-6 animate-slideIn">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-teal-100 to-cyan-100 flex items-center justify-center text-xl sm:text-2xl">
+                      <FiNavigation className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-teal-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t.steps[4]}</h2>
-                      <p className="text-gray-600 text-sm">Capture exact location coordinates</p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t.steps[4]}</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">Capture exact location coordinates</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     <button
                       onClick={detectGPS}
                       disabled={fetchingGPS}
-                      className={`px-6 py-4 rounded-xl font-bold text-white ${
+                      className={`px-4 sm:px-6 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-white ${
                         fetchingGPS 
                           ? "bg-blue-400 cursor-not-allowed" 
                           : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95"
-                      } flex items-center justify-center gap-3 transition-all`}
+                      } flex items-center justify-center gap-2 transition-all text-sm`}
                     >
                       {fetchingGPS ? (
                         <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                           {t.gps.updating}
                         </>
                       ) : (
                         <>
-                          <FiMapPin className="w-5 h-5" />
+                          <FiMapPin className="w-4 h-4" />
                           {t.gps.detect}
                         </>
                       )}
                     </button>
 
                     {coordinates ? (
-                      <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-300 rounded-2xl p-4 md:p-6 animate-fadeIn">
-                        <div className="flex items-start gap-3 md:gap-4">
-                          <div className="w-10 h-10 md:w-12 md:h-12 bg-green-200 rounded-full flex items-center justify-center flex-shrink-0">
-                            <FiCheck className="w-5 h-5 md:w-6 md:h-6 text-green-700" />
+                      <div className="bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-300 rounded-lg sm:rounded-2xl p-3 sm:p-4 md:p-6 animate-fadeIn">
+                        <div className="flex items-start gap-2 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-200 rounded-full flex items-center justify-center flex-shrink-0">
+                            <FiCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-700" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="font-bold text-green-900 mb-3 text-sm md:text-base">📍 GPS Location Captured</p>
-                            <div className="grid grid-cols-2 gap-3 text-sm">
+                            <p className="font-bold text-green-900 mb-2 text-xs sm:text-sm">📍 GPS Location Captured</p>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
-                                <p className="text-green-700 font-semibold mb-1 text-xs">Latitude</p>
-                                <p className="text-gray-900 font-mono bg-white/50 p-2 rounded-lg text-xs md:text-sm truncate">
+                                <p className="text-green-700 font-semibold mb-0.5 text-[10px]">Latitude</p>
+                                <p className="text-gray-900 font-mono bg-white/50 p-1.5 rounded-lg text-[10px] truncate">
                                   {coordinates.latitude.toFixed(6)}
                                 </p>
                               </div>
                               <div>
-                                <p className="text-green-700 font-semibold mb-1 text-xs">Longitude</p>
-                                <p className="text-gray-900 font-mono bg-white/50 p-2 rounded-lg text-xs md:text-sm truncate">
+                                <p className="text-green-700 font-semibold mb-0.5 text-[10px]">Longitude</p>
+                                <p className="text-gray-900 font-mono bg-white/50 p-1.5 rounded-lg text-[10px] truncate">
                                   {coordinates.longitude.toFixed(6)}
                                 </p>
                               </div>
                             </div>
-                            <div className="mt-3">
-                              <p className="text-green-700 font-semibold mb-1 text-xs">{t.gps.accuracy}</p>
-                              <p className="text-gray-900 text-sm">±{coordinates.accuracy.toFixed(1)} meters</p>
+                            <div className="mt-2">
+                              <p className="text-green-700 font-semibold mb-0.5 text-[10px]">{t.gps.accuracy}</p>
+                              <p className="text-gray-900 text-xs">±{coordinates.accuracy.toFixed(1)} meters</p>
                             </div>
                             <button
                               onClick={openInMaps}
-                              className="mt-4 px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-bold text-sm hover:from-green-700 hover:to-teal-700 flex items-center gap-2"
+                              className="mt-3 px-3 py-1.5 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-bold text-xs hover:from-green-700 hover:to-teal-700 flex items-center gap-1"
                             >
                               <span>🗺️</span>
                               {t.gps.verify}
@@ -1564,28 +1715,28 @@ export default function RaiseIssuePage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 md:p-8 text-center">
-                        <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <FiMapPin className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg sm:rounded-2xl p-4 sm:p-6 md:p-8 text-center">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
+                          <FiMapPin className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-gray-400" />
                         </div>
-                        <p className="text-gray-600 font-semibold text-sm md:text-base">Location not detected yet</p>
-                        <p className="text-gray-500 text-xs md:text-sm mt-1">Click "Detect Location" to capture GPS</p>
+                        <p className="text-gray-600 font-semibold text-xs sm:text-sm">Location not detected yet</p>
+                        <p className="text-gray-500 text-[10px] sm:text-xs mt-1">Click "Detect Location" to capture GPS</p>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Step 5: Photo */}
+              {/* Step 5: Photo - Mobile Optimized */}
               {currentStep === 5 && (
-                <div className="space-y-6 animate-slideIn">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center text-2xl">
-                      <MdPhotoCamera className="w-6 h-6 md:w-8 md:h-8 text-pink-600" />
+                <div className="space-y-4 sm:space-y-6 animate-slideIn">
+                  <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl bg-gradient-to-br from-pink-100 to-rose-100 flex items-center justify-center text-xl sm:text-2xl">
+                      <MdPhotoCamera className="w-4 h-4 sm:w-6 sm:h-6 md:w-8 md:h-8 text-pink-600" />
                     </div>
                     <div>
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t.steps[5]}</h2>
-                      <p className="text-gray-600 text-sm">Add photo evidence for better resolution</p>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{t.steps[5]}</h2>
+                      <p className="text-gray-600 text-xs sm:text-sm">Add photo evidence for better resolution</p>
                     </div>
                   </div>
 
@@ -1612,78 +1763,78 @@ export default function RaiseIssuePage() {
                   />
 
                   {uploadingPhoto ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                      <div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="mt-4 text-green-700 font-semibold">{t.photo.uploading}</p>
+                    <div className="flex flex-col items-center justify-center p-6 sm:p-8 md:p-12">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                      <p className="mt-3 sm:mt-4 text-green-700 font-semibold text-xs sm:text-sm">{t.photo.uploading}</p>
                     </div>
                   ) : !imagePreview ? (
-                    <div className="space-y-4">
+                    <div className="space-y-3 sm:space-y-4">
                       <button
                         onClick={() => cameraInputRef.current?.click()}
-                        className="w-full p-6 md:p-8 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold hover:from-purple-700 hover:to-indigo-700 shadow-xl active:scale-95 transition-all"
+                        className="w-full p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl md:rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold hover:from-purple-700 hover:to-indigo-700 shadow-xl active:scale-95 transition-all"
                       >
-                        <FiCamera className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" />
-                        <p className="text-xl md:text-2xl mb-2">{t.photo.camera}</p>
-                        <p className="text-purple-100 text-sm">Take a photo directly</p>
+                        <FiCamera className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3" />
+                        <p className="text-sm sm:text-base md:text-lg mb-1">{t.photo.camera}</p>
+                        <p className="text-purple-100 text-[10px] sm:text-xs">Take a photo directly</p>
                       </button>
 
                       <button
                         onClick={() => galleryInputRef.current?.click()}
-                        className="w-full p-6 md:p-8 rounded-2xl border-2 border-gray-300 bg-white hover:border-green-500 hover:bg-green-50 font-bold text-gray-700 active:scale-95 transition-all"
+                        className="w-full p-4 sm:p-6 md:p-8 rounded-lg sm:rounded-xl md:rounded-2xl border-2 border-gray-300 bg-white hover:border-green-500 hover:bg-green-50 font-bold text-gray-700 active:scale-95 transition-all"
                       >
-                        <FiUpload className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4 text-gray-500" />
-                        <p className="text-xl md:text-2xl mb-2">{t.photo.gallery}</p>
-                        <p className="text-gray-500 text-sm">Select from gallery</p>
+                        <FiUpload className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mx-auto mb-2 sm:mb-3 text-gray-500" />
+                        <p className="text-sm sm:text-base md:text-lg mb-1">{t.photo.gallery}</p>
+                        <p className="text-gray-500 text-[10px] sm:text-xs">Select from gallery</p>
                       </button>
 
                       <button
                         onClick={nextStep}
-                        className="w-full py-4 px-6 rounded-2xl border-2 border-green-500 bg-white text-green-600 font-bold hover:bg-green-50 active:scale-95 transition-all"
+                        className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl border-2 border-green-500 bg-white text-green-600 font-bold hover:bg-green-50 active:scale-95 transition-all text-sm"
                       >
                         {t.buttons.skip}
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="relative rounded-2xl overflow-hidden border-2 border-gray-300">
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="relative rounded-lg sm:rounded-xl overflow-hidden border-2 border-gray-300">
                         <img 
                           src={imagePreview} 
                           alt="Issue evidence" 
-                          className="w-full h-48 md:h-64 object-cover"
+                          className="w-full h-32 sm:h-40 md:h-48 object-cover"
                         />
                         
-                        <div className="absolute top-3 right-3">
+                        <div className="absolute top-2 right-2">
                           <button
                             onClick={removeImage}
-                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 active:scale-95 transition-all"
+                            className="p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 active:scale-95 transition-all"
                           >
-                            <FiX className="w-4 h-4" />
+                            <FiX className="w-3 h-3" />
                           </button>
                         </div>
 
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
-                          <div className="flex items-center gap-3 text-white">
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                              <FiCheck className="w-4 h-4" />
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2 sm:p-3">
+                          <div className="flex items-center gap-2 text-white">
+                            <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                              <FiCheck className="w-3 h-3" />
                             </div>
                             <div>
-                              <p className="font-bold text-sm md:text-base">Photo Ready</p>
-                              <p className="text-xs text-gray-200">Image will be attached to report</p>
+                              <p className="font-bold text-xs">Photo Ready</p>
+                              <p className="text-[10px] text-gray-200">Image will be attached</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => cameraInputRef.current?.click()}
-                          className="py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold active:scale-95 transition-all"
+                          className="py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg font-bold active:scale-95 transition-all text-xs"
                         >
                           {t.photo.retake}
                         </button>
                         <button
                           onClick={() => galleryInputRef.current?.click()}
-                          className="py-3 px-4 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold active:scale-95 transition-all"
+                          className="py-2 px-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg font-bold active:scale-95 transition-all text-xs"
                         >
                           {t.photo.change}
                         </button>
@@ -1693,12 +1844,12 @@ export default function RaiseIssuePage() {
                 </div>
               )}
 
-              {/* Navigation Buttons */}
-              <div className="mt-8 flex gap-3">
+              {/* Navigation Buttons - Mobile Optimized */}
+              <div className="mt-4 sm:mt-6 flex gap-2">
                 {currentStep > 1 && (
                   <button
                     onClick={prevStep}
-                    className="px-4 md:px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl font-bold hover:from-gray-200 hover:to-gray-300 active:scale-95 transition-all flex-1"
+                    className="px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-lg sm:rounded-xl font-bold hover:from-gray-200 hover:to-gray-300 active:scale-95 transition-all flex-1 text-xs sm:text-sm"
                   >
                     {t.buttons.previous}
                   </button>
@@ -1707,24 +1858,24 @@ export default function RaiseIssuePage() {
                 {currentStep < 5 ? (
                   <button
                     onClick={nextStep}
-                    className={`${currentStep > 1 ? 'flex-1' : 'w-full'} px-4 md:px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-teal-700 active:scale-95 transition-all flex items-center justify-center gap-2`}
+                    className={`${currentStep > 1 ? 'flex-1' : 'w-full'} px-3 sm:px-4 md:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg sm:rounded-xl font-bold hover:from-green-700 hover:to-teal-700 active:scale-95 transition-all flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm`}
                   >
                     {t.buttons.next}
-                    <FiChevronRight className="w-4 h-4" />
+                    <FiChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                   </button>
                 ) : (
                   <button
                     onClick={submitIssue}
                     disabled={submitting}
-                    className={`flex-1 px-4 md:px-6 py-3 rounded-xl font-bold text-white ${
+                    className={`flex-1 px-3 sm:px-4 md:px-6 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-white ${
                       submitting 
                         ? "bg-gradient-to-r from-green-400 to-teal-400 cursor-not-allowed" 
                         : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 active:scale-95"
-                    } transition-all`}
+                    } transition-all text-xs sm:text-sm`}
                   >
                     {submitting ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span className="flex items-center justify-center gap-1 sm:gap-2">
+                        <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         {t.buttons.submitting}
                       </span>
                     ) : (
@@ -1739,40 +1890,40 @@ export default function RaiseIssuePage() {
 
         {/* Bottom Navigation - Mobile Only */}
         <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-lg border-t-2 border-green-100 shadow-xl md:hidden">
-          <div className="grid grid-cols-4 gap-1 p-2">
+          <div className="grid grid-cols-4 gap-1 p-1">
             <button
               onClick={() => router.push(`/${locale}/villager/dashboard`)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-green-50 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-green-50 transition-all active:scale-95"
             >
-              <FiHome className="w-5 h-5 text-green-600" />
-              <span className="text-xs mt-1 font-medium text-green-700">
+              <FiHome className="w-4 h-4 text-green-600" />
+              <span className="text-[10px] mt-0.5 font-medium text-green-700 truncate w-full text-center">
                 {t.nav.dashboard}
               </span>
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/my-issues`)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-green-50 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-green-50 transition-all active:scale-95"
             >
-              <FiList className="w-5 h-5 text-green-600" />
-              <span className="text-xs mt-1 font-medium text-green-700">
+              <FiList className="w-4 h-4 text-green-600" />
+              <span className="text-[10px] mt-0.5 font-medium text-green-700 truncate w-full text-center">
                 {t.nav.myIssues}
               </span>
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/issue-tracking`)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-green-50 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-green-50 transition-all active:scale-95"
             >
-              <FiTrendingUp className="w-5 h-5 text-green-600" />
-              <span className="text-xs mt-1 font-medium text-green-700">
+              <FiTrendingUp className="w-4 h-4 text-green-600" />
+              <span className="text-[10px] mt-0.5 font-medium text-green-700 truncate w-full text-center">
                 {t.nav.trackIssues}
               </span>
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/profile`)}
-              className="flex flex-col items-center justify-center p-3 rounded-xl hover:bg-green-50 transition-all active:scale-95"
+              className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-green-50 transition-all active:scale-95"
             >
-              <FiUser className="w-5 h-5 text-green-600" />
-              <span className="text-xs mt-1 font-medium text-green-700">
+              <FiUser className="w-4 h-4 text-green-600" />
+              <span className="text-[10px] mt-0.5 font-medium text-green-700 truncate w-full text-center">
                 {t.nav.profile}
               </span>
             </button>
@@ -1784,7 +1935,7 @@ export default function RaiseIssuePage() {
           <div className="grid grid-cols-4 gap-1">
             <button
               onClick={() => router.push(`/${locale}/villager/dashboard`)}
-              className="flex flex-col items-center justify-center p-4 rounded-xl hover:bg-green-50 transition-all"
+              className="flex flex-col items-center justify-center p-3 px-6 rounded-xl hover:bg-green-50 transition-all"
             >
               <FiHome className="w-5 h-5 text-green-600" />
               <span className="text-xs mt-1 font-medium text-green-700">
@@ -1793,7 +1944,7 @@ export default function RaiseIssuePage() {
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/my-issues`)}
-              className="flex flex-col items-center justify-center p-4 rounded-xl hover:bg-green-50 transition-all"
+              className="flex flex-col items-center justify-center p-3 px-6 rounded-xl hover:bg-green-50 transition-all"
             >
               <FiList className="w-5 h-5 text-green-600" />
               <span className="text-xs mt-1 font-medium text-green-700">
@@ -1802,7 +1953,7 @@ export default function RaiseIssuePage() {
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/issue-tracking`)}
-              className="flex flex-col items-center justify-center p-4 rounded-xl hover:bg-green-50 transition-all"
+              className="flex flex-col items-center justify-center p-3 px-6 rounded-xl hover:bg-green-50 transition-all"
             >
               <FiTrendingUp className="w-5 h-5 text-green-600" />
               <span className="text-xs mt-1 font-medium text-green-700">
@@ -1811,7 +1962,7 @@ export default function RaiseIssuePage() {
             </button>
             <button
               onClick={() => router.push(`/${locale}/villager/profile`)}
-              className="flex flex-col items-center justify-center p-4 rounded-xl hover:bg-green-50 transition-all"
+              className="flex flex-col items-center justify-center p-3 px-6 rounded-xl hover:bg-green-50 transition-all"
             >
               <FiUser className="w-5 h-5 text-green-600" />
               <span className="text-xs mt-1 font-medium text-green-700">
