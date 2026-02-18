@@ -18,17 +18,35 @@ const translations = {
     resolved: "Resolved:",
     pending: "Pending:",
     escalated: "Escalated:",
-    gpsAffected: "GPs Affected:",
+    gpAffected: "GPs Affected:",
     resolutionRate: "Resolution Rate:",
     avgTime: "Avg Time:",
     days: "days",
-    noData: "No category data available",
-    stats: "Statistics",
-    viewDetails: "View Details",
-    tapForMore: "Tap for more details",
-    pullToRefresh: "Pull to refresh",
-    lastUpdated: "Last updated",
-    categories: "Categories"
+    noCategories: "No categories found",
+    statsOverview: "Statistics Overview",
+    totalCategories: "Total Categories",
+    totalIssuesCount: "Total Issues",
+    overallResolved: "Overall Resolved",
+    overallPending: "Overall Pending"
+  },
+  kn: {
+    back: "← ಹಿಂದೆ",
+    title: "ವರ್ಗೀಯ ವಿಶ್ಲೇಷಣೆ",
+    loading: "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+    totalIssues: "ಒಟ್ಟು ಸಮಸ್ಯೆಗಳು:",
+    resolved: "ಪರಿಹರಿಸಲಾಗಿದೆ:",
+    pending: "ಬಾಕಿ ಇವೆ:",
+    escalated: "ಉಲ್ಬಣಗೊಂಡಿದೆ:",
+    gpAffected: "ಗ್ರಾಪಂಗಳು:",
+    resolutionRate: "ಪರಿಹಾರ ದರ:",
+    avgTime: "ಸರಾಸರಿ ಸಮಯ:",
+    days: "ದಿನಗಳು",
+    noCategories: "ಯಾವುದೇ ವರ್ಗಗಳು ಕಂಡುಬಂದಿಲ್ಲ",
+    statsOverview: "ಅಂಕಿಅಂಶಗಳ ಅವಲೋಕನ",
+    totalCategories: "ಒಟ್ಟು ವರ್ಗಗಳು",
+    totalIssuesCount: "ಒಟ್ಟು ಸಮಸ್ಯೆಗಳು",
+    overallResolved: "ಒಟ್ಟು ಪರಿಹರಿಸಲಾಗಿದೆ",
+    overallPending: "ಒಟ್ಟು ಬಾಕಿ"
   },
   hi: {
     back: "← वापस",
@@ -37,38 +55,17 @@ const translations = {
     totalIssues: "कुल समस्याएं:",
     resolved: "हल की गईं:",
     pending: "लंबित:",
-    escalated: "एस्केलेटेड:",
-    gpsAffected: "प्रभावित जीपी:",
+    escalated: "बढ़ी हुई:",
+    gpAffected: "प्रभावित ग्राम पंचायतें:",
     resolutionRate: "समाधान दर:",
     avgTime: "औसत समय:",
     days: "दिन",
-    noData: "कोई श्रेणी डेटा उपलब्ध नहीं है",
-    stats: "आंकड़े",
-    viewDetails: "विवरण देखें",
-    tapForMore: "अधिक जानकारी के लिए टैप करें",
-    pullToRefresh: "रिफ्रेश के लिए खींचें",
-    lastUpdated: "अंतिम अपडेट",
-    categories: "श्रेणियाँ"
-  },
-  gu: {
-    back: "← પાછા",
-    title: "શ્રેણી વિશ્લેષણ",
-    loading: "લોડ થઈ રહ્યું છે...",
-    totalIssues: "કુલ સમસ્યાઓ:",
-    resolved: "હલ થયેલ:",
-    pending: "બાકી:",
-    escalated: "એસ્કેલેટેડ:",
-    gpsAffected: "અસરગ્રસ્ત GP:",
-    resolutionRate: "સમાધાન દર:",
-    avgTime: "સરેરાશ સમય:",
-    days: "દિવસ",
-    noData: "કોઈ શ્રેણી ડેટા ઉપલબ્ધ નથી",
-    stats: "આંકડા",
-    viewDetails: "વિગતો જુઓ",
-    tapForMore: "વધુ વિગતો માટે ટેપ કરો",
-    pullToRefresh: "રિફ્રેશ માટે ખેંચો",
-    lastUpdated: "છેલ્લું અપડેટ",
-    categories: "શ્રેણીઓ"
+    noCategories: "कोई श्रेणी नहीं मिली",
+    statsOverview: "सांख्यिकी अवलोकन",
+    totalCategories: "कुल श्रेणियां",
+    totalIssuesCount: "कुल समस्याएं",
+    overallResolved: "कुल हल की गईं",
+    overallPending: "कुल लंबित"
   }
 };
 
@@ -80,10 +77,12 @@ export default function CategoryAnalysisPage() {
   
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState({
+    totalCategories: 0,
+    totalIssues: 0,
+    totalResolved: 0,
+    totalPending: 0
+  });
 
   useEffect(() => {
     loadCategoryData();
@@ -151,26 +150,27 @@ export default function CategoryAnalysisPage() {
         avgResolutionTime: cat.resolved > 0 ? Math.round(cat.totalTime / cat.resolved) : 0
       }));
 
+      // Calculate overall stats
+      const totalIssues = categoryArray.reduce((sum, cat) => sum + cat.total, 0);
+      const totalResolved = categoryArray.reduce((sum, cat) => sum + cat.resolved, 0);
+      const totalPending = categoryArray.reduce((sum, cat) => sum + cat.pending, 0);
+
+      setStats({
+        totalCategories: categoryArray.length,
+        totalIssues,
+        totalResolved,
+        totalPending
+      });
+
       setCategories(categoryArray.sort((a, b) => b.total - a.total));
-      setLastUpdated(new Date());
     } catch (error) {
       console.error("Error loading category data:", error);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await loadCategoryData();
-  };
-
-  const handleCategoryClick = (category: any) => {
-    setSelectedCategory(category);
-    setShowDetails(true);
-  };
-
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -194,288 +194,256 @@ export default function CategoryAnalysisPage() {
     }
   };
 
-  const progressBarVariants = {
-    hidden: { width: 0 },
-    visible: (width: number) => ({
-      width: `${width}%`,
+  const statCardVariants = {
+    hidden: { scale: 0.9, opacity: 0 },
+    visible: {
+      scale: 1,
+      opacity: 1,
       transition: {
-        duration: 1,
-        ease: "easeOut"
+        type: "spring",
+        stiffness: 200,
+        damping: 15
       }
-    })
+    }
   };
 
   return (
-    <Screen>
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white">
-        {/* Header with pull-to-refresh indicator */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-green-100">
-          <div className="max-w-7xl mx-auto px-4 py-3">
-            <div className="flex items-center justify-between">
-              <motion.button
-                onClick={() => router.back()}
-                className="text-green-700 hover:text-green-900 flex items-center gap-2 text-sm md:text-base"
-                whileHover={{ x: -5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="text-lg">←</span>
-                <span className="hidden sm:inline">{t.back}</span>
-              </motion.button>
-              
-              <motion.h1 
-                className="text-lg md:text-2xl font-bold text-green-900"
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                {t.title}
-              </motion.h1>
+    <Screen padded>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+        {/* Back Button */}
+        <motion.button
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          onClick={() => router.back()}
+          className="mb-4 sm:mb-6 text-green-700 hover:text-green-900 flex items-center gap-2 text-sm sm:text-base"
+        >
+          <span className="text-lg">←</span> {t.back}
+        </motion.button>
 
-              <motion.button
-                onClick={handleRefresh}
-                className="p-2 rounded-full bg-green-100 text-green-700"
-                whileTap={{ rotate: 180 }}
-                animate={{ rotate: refreshing ? 360 : 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </motion.button>
-            </div>
+        {/* Header */}
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="mb-6 sm:mb-8"
+        >
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-green-900">
+            {t.title}
+          </h1>
+        </motion.div>
 
-            {/* Last updated - mobile friendly */}
-            <motion.p 
-              className="text-xs text-green-600 mt-2 text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3 }}
+        {loading ? (
+          // Loading Animation
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-12"
+          >
+            <motion.div
+              animate={{
+                rotate: 360,
+                scale: [1, 1.1, 1]
+              }}
+              transition={{
+                rotate: { duration: 1.5, repeat: Infinity, ease: "linear" },
+                scale: { duration: 1, repeat: Infinity }
+              }}
+              className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full mb-4"
+            />
+            <p className="text-green-700 text-sm sm:text-base">{t.loading}</p>
+          </motion.div>
+        ) : (
+          <>
+            {/* Stats Overview Cards - Mobile Responsive */}
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8"
             >
-              {t.lastUpdated}: {lastUpdated.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
-            </motion.p>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 py-4 md:py-6">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full"
-              />
-              <p className="mt-4 text-green-700">{t.loading}</p>
-            </div>
-          ) : categories.length === 0 ? (
-            <motion.div 
-              className="text-center py-12 bg-white rounded-2xl border border-green-100"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <p className="text-green-700">{t.noData}</p>
+                variants={statCardVariants}
+                className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-green-100"
+              >
+                <p className="text-xs sm:text-sm text-green-600 mb-1">{t.totalCategories}</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-900">{stats.totalCategories}</p>
+              </motion.div>
+
+              <motion.div
+                variants={statCardVariants}
+                className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-green-100"
+              >
+                <p className="text-xs sm:text-sm text-green-600 mb-1">{t.totalIssuesCount}</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-900">{stats.totalIssues}</p>
+              </motion.div>
+
+              <motion.div
+                variants={statCardVariants}
+                className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-green-100"
+              >
+                <p className="text-xs sm:text-sm text-green-600 mb-1">{t.overallResolved}</p>
+                <p className="text-lg sm:text-2xl font-bold text-green-600">{stats.totalResolved}</p>
+              </motion.div>
+
+              <motion.div
+                variants={statCardVariants}
+                className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-green-100"
+              >
+                <p className="text-xs sm:text-sm text-green-600 mb-1">{t.overallPending}</p>
+                <p className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.totalPending}</p>
+              </motion.div>
             </motion.div>
-          ) : (
-            <>
-              {/* Category Cards - Mobile optimized grid */}
-              <motion.div 
-                className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-6"
+
+            {/* Categories Grid - Mobile Responsive */}
+            {categories.length > 0 ? (
+              <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
               >
-                {categories.map((category, index) => (
-                  <motion.div
-                    key={category.name}
-                    variants={itemVariants}
-                    whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1)" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleCategoryClick(category)}
-                    className="bg-white border border-green-100 rounded-xl md:rounded-2xl p-4 md:p-6 cursor-pointer touch-manipulation"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-base md:text-lg font-bold text-green-900 truncate pr-2">
+                <AnimatePresence>
+                  {categories.map((category, index) => (
+                    <motion.div
+                      key={category.name}
+                      variants={itemVariants}
+                      whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                      className="bg-white border border-green-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <h3 className="text-base sm:text-lg font-bold text-green-900 mb-3 sm:mb-4 line-clamp-1">
                         {category.name}
                       </h3>
-                      <span className="text-xs md:text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                        {category.total}
-                      </span>
-                    </div>
+                      
+                      <div className="space-y-2 sm:space-y-3">
+                        {/* Total Issues */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.totalIssues}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.3 }}
+                            className="font-bold text-green-900"
+                          >
+                            {category.total}
+                          </motion.span>
+                        </div>
 
-                    {/* Mobile-optimized stats grid */}
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-green-50 rounded-lg p-2">
-                        <p className="text-xs text-green-700">{t.resolved}</p>
-                        <p className="text-sm font-bold text-green-600">{category.resolved}</p>
-                      </div>
-                      <div className="bg-yellow-50 rounded-lg p-2">
-                        <p className="text-xs text-yellow-700">{t.pending}</p>
-                        <p className="text-sm font-bold text-yellow-600">{category.pending}</p>
-                      </div>
-                    </div>
+                        {/* Resolved */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.resolved}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.4 }}
+                            className="font-bold text-green-600"
+                          >
+                            {category.resolved}
+                          </motion.span>
+                        </div>
 
-                    {/* Progress bar - mobile friendly */}
-                    <div className="mt-3">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-green-700">{t.resolutionRate}</span>
-                        <motion.span 
-                          className={`font-bold ${
-                            category.resolutionRate >= 80 ? 'text-green-600' :
-                            category.resolutionRate >= 60 ? 'text-yellow-600' : 'text-red-600'
-                          }`}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.5 + index * 0.1 }}
-                        >
-                          {category.resolutionRate}%
-                        </motion.span>
-                      </div>
-                      <div className="h-2 bg-green-100 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-green-500"
-                          custom={category.resolutionRate}
-                          variants={progressBarVariants}
-                          initial="hidden"
-                          animate="visible"
-                        />
-                      </div>
-                    </div>
+                        {/* Pending */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.pending}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.5 }}
+                            className="font-bold text-yellow-600"
+                          >
+                            {category.pending}
+                          </motion.span>
+                        </div>
 
-                    {/* Mobile tap hint */}
-                    <motion.p 
-                      className="text-xs text-green-400 mt-3 text-center md:hidden"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 1 }}
-                    >
-                      {t.tapForMore}
-                    </motion.p>
-                  </motion.div>
-                ))}
-              </motion.div>
+                        {/* Escalated */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.escalated}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.6 }}
+                            className="font-bold text-red-600"
+                          >
+                            {category.escalated}
+                          </motion.span>
+                        </div>
 
-              {/* Category Details Modal - Mobile optimized */}
-              <AnimatePresence>
-                {showDetails && selectedCategory && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-                    onClick={() => setShowDetails(false)}
-                  >
-                    {/* Backdrop */}
-                    <motion.div 
-                      className="absolute inset-0 bg-black/50"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                    />
+                        {/* GPs Affected */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.gpAffected}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.7 }}
+                            className="font-bold"
+                          >
+                            {category.gps}
+                          </motion.span>
+                        </div>
 
-                    {/* Modal Content - Mobile friendly from bottom */}
-                    <motion.div
-                      initial={{ y: "100%" }}
-                      animate={{ y: 0 }}
-                      exit={{ y: "100%" }}
-                      transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                      className="relative bg-white rounded-t-2xl md:rounded-2xl w-full md:max-w-lg p-6 md:m-4"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg md:text-xl font-bold text-green-900">
-                          {selectedCategory.name} - {t.details}
-                        </h3>
-                        <motion.button
-                          onClick={() => setShowDetails(false)}
-                          whileTap={{ scale: 0.9 }}
-                          className="p-2 hover:bg-green-50 rounded-full"
-                        >
-                          <svg className="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </motion.button>
-                      </div>
+                        {/* Resolution Rate */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.resolutionRate}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.8 }}
+                            className={`font-bold ${
+                              category.resolutionRate >= 80 ? 'text-green-600' :
+                              category.resolutionRate >= 60 ? 'text-yellow-600' : 'text-red-600'
+                            }`}
+                          >
+                            {category.resolutionRate}%
+                          </motion.span>
+                        </div>
 
-                      <div className="space-y-4">
+                        {/* Average Time */}
+                        <div className="flex justify-between items-center text-xs sm:text-sm">
+                          <span className="text-green-700">{t.avgTime}</span>
+                          <motion.span 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: index * 0.1 + 0.9 }}
+                            className="font-bold"
+                          >
+                            {category.avgResolutionTime} {t.days}
+                          </motion.span>
+                        </div>
+
+                        {/* Progress Bar */}
                         <motion.div 
-                          className="grid grid-cols-2 gap-3"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.2 }}
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          transition={{ delay: index * 0.1 + 1, duration: 0.5 }}
+                          className="mt-3 sm:mt-4"
                         >
-                          <div className="bg-green-50 rounded-xl p-4">
-                            <p className="text-xs text-green-700 mb-1">{t.totalIssues}</p>
-                            <p className="text-2xl font-bold text-green-900">{selectedCategory.total}</p>
-                          </div>
-                          <div className="bg-green-50 rounded-xl p-4">
-                            <p className="text-xs text-green-700 mb-1">{t.gpsAffected}</p>
-                            <p className="text-2xl font-bold text-green-900">{selectedCategory.gps}</p>
+                          <div className="h-1.5 sm:h-2 bg-green-100 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${category.resolutionRate}%` }}
+                              transition={{ delay: index * 0.1 + 1.2, duration: 0.8 }}
+                              className="h-full bg-green-500 rounded-full"
+                            />
                           </div>
                         </motion.div>
-
-                        <motion.div 
-                          className="space-y-3"
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-green-700">{t.resolved}</span>
-                            <span className="font-bold text-green-600">{selectedCategory.resolved}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-green-700">{t.pending}</span>
-                            <span className="font-bold text-yellow-600">{selectedCategory.pending}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-green-700">{t.escalated}</span>
-                            <span className="font-bold text-red-600">{selectedCategory.escalated}</span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-green-700">{t.resolutionRate}</span>
-                            <span className={`font-bold ${
-                              selectedCategory.resolutionRate >= 80 ? 'text-green-600' :
-                              selectedCategory.resolutionRate >= 60 ? 'text-yellow-600' : 'text-red-600'
-                            }`}>
-                              {selectedCategory.resolutionRate}%
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span className="text-sm text-green-700">{t.avgTime}</span>
-                            <span className="font-bold">{selectedCategory.avgResolutionTime} {t.days}</span>
-                          </div>
-                        </motion.div>
-
-                        <motion.button
-                          onClick={() => setShowDetails(false)}
-                          className="w-full mt-4 bg-green-600 text-white py-3 rounded-xl font-medium"
-                          whileTap={{ scale: 0.98 }}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.4 }}
-                        >
-                          Close
-                        </motion.button>
                       </div>
                     </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </>
-          )}
-        </div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            ) : (
+              // No Categories Found
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-12 bg-white rounded-2xl border border-green-100"
+              >
+                <p className="text-green-700 text-sm sm:text-base">{t.noCategories}</p>
+              </motion.div>
+            )}
+          </>
+        )}
       </div>
-
-      {/* Mobile swipe indicator */}
-      <motion.div 
-        className="fixed bottom-4 left-1/2 transform -translate-x-1/2 md:hidden bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg"
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 2, duration: 0.5 }}
-      >
-        <p className="text-xs text-green-700">↓ {t.pullToRefresh}</p>
-      </motion.div>
     </Screen>
   );
 }
